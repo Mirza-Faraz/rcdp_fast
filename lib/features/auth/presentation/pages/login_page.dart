@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../bloc/auth_bloc.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_text_field.dart';
 
 class LoginPage extends StatelessWidget {
   final String username;
@@ -44,15 +46,35 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
+  void _handleLogin() {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (username.isNotEmpty && password.isNotEmpty) {
+      context.read<AuthBloc>().add(
+            LoginEvent(username: username, password: password),
+          );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF4A6FA5),
+      backgroundColor: const Color(0xFF4B6FA5),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const HomePage()),
+              MaterialPageRoute(
+                builder: (_) => HomePage(
+                  userName: widget.username,
+                  userRole: 'Credit Officer',
+                ),
+              ),
             );
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -61,119 +83,69 @@ class _LoginViewState extends State<LoginView> {
           }
         },
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ),
-                const Spacer(),
-                TextField(
-                  controller: _usernameController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.white, width: 2),
+          child: SingleChildScrollView(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top,
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back_ios,
+                            color: Colors.white, size: 20),
+                        onPressed: () => Navigator.of(context).pop(),
+                        padding: EdgeInsets.zero,
+                      ),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.white, width: 2),
+                    const Spacer(),
+                    CustomTextField(
+                      controller: _usernameController,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 20,
+                    const SizedBox(height: 20),
+                    CustomTextField(
+                      controller: _passwordController,
+                      hintText: 'Password',
+                      obscureText: true,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Password',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.white, width: 2),
+                    const SizedBox(height: 24),
+                    CustomButton(
+                      text: 'Login',
+                      onPressed: _handleLogin,
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.white, width: 2),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      final username = _usernameController.text.trim();
-                      final password = _passwordController.text.trim();
-                      
-                      if (username.isNotEmpty && password.isNotEmpty) {
-                        context.read<AuthBloc>().add(
-                              LoginEvent(
-                                username: username,
-                                password: password,
-                              ),
-                            );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please fill all fields'),
+                    const SizedBox(height: 40),
+                    Column(
+                      children: [
+                        const Text(
+                          'Do you want to change your password?',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
                           ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF4A6FA5),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            // TODO: Implement change password
+                          },
+                          child: const Text(
+                            'Click here',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+                    const Spacer(),
+                  ],
                 ),
-                const SizedBox(height: 40),
-                const Text(
-                  'Do you want to change your password?',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Implement change password
-                  },
-                  child: const Text(
-                    'Click here',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-              ],
+              ),
             ),
           ),
         ),

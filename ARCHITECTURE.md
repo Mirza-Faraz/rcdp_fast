@@ -7,40 +7,59 @@ This project follows Clean Architecture principles with BLoC state management.
 ```
 lib/
 ├── core/                          # Core functionality
+│   ├── constants/                 # App-wide constants
+│   │   ├── app_colors.dart        # Color palette
+│   │   ├── app_dimensions.dart    # Spacing and sizes
+│   │   ├── app_strings.dart       # String constants
+│   │   └── app_text_styles.dart   # Text styles
 │   ├── error/                     # Error handling
 │   │   ├── exceptions.dart        # Custom exceptions
 │   │   └── failures.dart          # Failure classes
 │   ├── network/                   # Network utilities
 │   │   └── network_info.dart      # Network connectivity
-│   └── usecases/                  # Base use case
-│       └── usecase.dart           # UseCase interface
+│   ├── theme/                     # App theming
+│   │   └── app_theme.dart         # Theme configuration
+│   ├── usecases/                  # Base use case
+│   │   └── usecase.dart           # UseCase interface
+│   └── utils/                     # Utility functions
+│       └── asset_helper.dart      # Asset path helpers
 │
 ├── features/                      # Feature modules
-│   └── example/                   # Example feature
-│       ├── data/                  # Data layer
-│       │   ├── datasources/       # Data sources
-│       │   │   ├── example_local_data_source.dart
-│       │   │   └── example_remote_data_source.dart
-│       │   ├── models/            # Data models
-│       │   │   └── example_model.dart
-│       │   └── repositories/      # Repository implementations
-│       │       └── example_repository_impl.dart
-│       │
-│       ├── domain/                # Domain layer
-│       │   ├── entities/          # Business entities
-│       │   │   └── example_entity.dart
-│       │   ├── repositories/      # Repository interfaces
-│       │   │   └── example_repository.dart
-│       │   └── usecases/          # Business logic
-│       │       └── get_examples.dart
-│       │
-│       └── presentation/          # Presentation layer
-│           ├── bloc/              # BLoC state management
-│           │   ├── example_bloc.dart
-│           │   ├── example_event.dart
-│           │   └── example_state.dart
-│           └── pages/             # UI pages
-│               └── example_page.dart
+│   ├── auth/                      # Authentication feature
+│   │   ├── data/
+│   │   │   ├── datasources/
+│   │   │   │   └── auth_local_data_source.dart
+│   │   │   └── repositories/
+│   │   │       └── auth_repository_impl.dart
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   │   └── user_entity.dart
+│   │   │   ├── repositories/
+│   │   │   │   └── auth_repository.dart
+│   │   │   └── usecases/
+│   │   │       ├── get_saved_username_usecase.dart
+│   │   │       ├── login_usecase.dart
+│   │   │       └── save_username_usecase.dart
+│   │   └── presentation/
+│   │       ├── bloc/
+│   │       │   ├── auth_bloc.dart
+│   │       │   ├── auth_event.dart
+│   │       │   └── auth_state.dart
+│   │       ├── pages/
+│   │       │   ├── splash_page.dart
+│   │       │   ├── username_page.dart
+│   │       │   └── login_page.dart
+│   │       └── widgets/
+│   │           ├── custom_button.dart
+│   │           └── custom_text_field.dart
+│   │
+│   └── home/                      # Home/Dashboard feature
+│       └── presentation/
+│           └── pages/
+│               ├── home_page.dart
+│               ├── settings_page.dart
+│               ├── data_detail_page.dart
+│               └── menu_detail_page.dart
 │
 ├── injection_container.dart       # Dependency injection setup
 └── main.dart                      # App entry point
