@@ -128,8 +128,8 @@ class _HomePageState extends State<HomePage> {
     final menuItems = [
       _MenuItem(
         icon: '📊',
-        label: 'CLIENT DISB\nURSEMENT',
-        subtitle: 'کلائنٹ کی\nتقسیم',
+        label: 'CLIENT DISBURSEMENT',
+        subtitle: '',
         route: 'client_disbursement',
       ),
       _MenuItem(

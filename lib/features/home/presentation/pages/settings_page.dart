@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../settings/presentation/pages/profile_page.dart';
+import '../../../settings/presentation/pages/proscribed_page.dart';
+import '../../../settings/presentation/pages/user_tracking_page.dart';
+import '../../../settings/presentation/pages/update_location_page.dart';
+import '../../../settings/presentation/pages/change_password_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -45,9 +50,9 @@ class SettingsPage extends StatelessWidget {
                     icon: Icons.person_outline,
                     title: 'Profile',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Profile page coming soon')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ProfilePage()),
                       );
                     },
                   ),
@@ -56,9 +61,9 @@ class SettingsPage extends StatelessWidget {
                     icon: Icons.description_outlined,
                     title: 'Proscribed Form',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Proscribed Form page coming soon')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ProscribedPage()),
                       );
                     },
                   ),
@@ -67,9 +72,9 @@ class SettingsPage extends StatelessWidget {
                     icon: Icons.admin_panel_settings_outlined,
                     title: 'Admin Panel',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Admin Panel coming soon')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const UserTrackingPage()),
                       );
                     },
                   ),
@@ -78,9 +83,9 @@ class SettingsPage extends StatelessWidget {
                     icon: Icons.location_on_outlined,
                     title: 'Update Location',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Update Location page coming soon')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const UpdateLocationPage()),
                       );
                     },
                   ),
@@ -89,9 +94,9 @@ class SettingsPage extends StatelessWidget {
                     icon: Icons.lock_outline,
                     title: 'Change Password',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Change Password page coming soon')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
                       );
                     },
                   ),
