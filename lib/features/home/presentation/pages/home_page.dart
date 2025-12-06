@@ -3,6 +3,14 @@ import '../../../../core/constants/app_colors.dart';
 import 'settings_page.dart';
 import 'data_detail_page.dart';
 import 'menu_detail_page.dart';
+import 'approvals_page.dart';
+import 'follow_up_clients_page.dart';
+import 'recovery_form_page.dart';
+import 'overdue_clients_page.dart';
+import 'clients_nearby_page.dart';
+import 'reports_page.dart';
+import 'loan_tracking_list_page.dart';
+import 'disbursement_page.dart';
 
 class HomePage extends StatefulWidget {
   final String userName;
@@ -170,9 +178,9 @@ class _HomePageState extends State<HomePage> {
       ),
       _MenuItem(
         icon: '📝',
-        label: 'LOAN\nTREARING LIST',
+        label: 'LOAN\nTRACKING LIST',
         subtitle: '',
-        route: 'loan_trearing_list',
+        route: 'loan_tracking_list',
       ),
     ];
 
@@ -198,27 +206,82 @@ class _HomePageState extends State<HomePage> {
   Widget _buildMenuItem(_MenuItem item) {
     return GestureDetector(
       onTap: () {
-        // Special handling for Clients Nearby (tracking page)
-        if (item.route == 'clients_nearby') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DataDetailPage(
-                title: item.label.replaceAll('\n', ' '),
-                dataType: item.route,
+        // Navigate to specific pages based on route
+        switch (item.route) {
+          case 'client_disbursement':
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const DisbursementPage(),
               ),
-            ),
-          );
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => MenuDetailPage(
-                title: item.label.replaceAll('\n', ' '),
-                icon: _getIconForRoute(item.route),
+            );
+            break;
+          case 'approvals':
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ApprovalsPage(),
               ),
-            ),
-          );
+            );
+            break;
+          case 'follow_up_clients':
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const FollowUpClientsPage(),
+              ),
+            );
+            break;
+          case 'recovery_form':
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const RecoveryFormPage(),
+              ),
+            );
+            break;
+          case 'overdue_clients':
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const OverdueClientsPage(),
+              ),
+            );
+            break;
+          case 'clients_nearby':
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ClientsNearbyPage(),
+              ),
+            );
+            break;
+          case 'reports':
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ReportsPage(),
+              ),
+            );
+            break;
+          case 'loan_trearing_list':
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const LoanTrackingListPage(),
+              ),
+            );
+            break;
+          default:
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MenuDetailPage(
+                  title: item.label.replaceAll('\n', ' '),
+                  icon: _getIconForRoute(item.route),
+                ),
+              ),
+            );
         }
       },
       child: Column(

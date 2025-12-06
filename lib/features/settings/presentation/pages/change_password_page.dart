@@ -49,7 +49,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Faraz TEST',
+              'Khalid Test',
               style: AppTextStyles.h2.copyWith(
                 color: AppColors.primary,
               ),
