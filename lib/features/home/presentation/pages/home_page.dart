@@ -16,11 +16,7 @@ class HomePage extends StatefulWidget {
   final String userName;
   final String userRole;
 
-  const HomePage({
-    super.key,
-    required this.userName,
-    required this.userRole,
-  });
+  const HomePage({super.key, required this.userName, required this.userRole});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -61,10 +57,7 @@ class _HomePageState extends State<HomePage> {
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
-                  ),
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
                 ),
                 child: Column(
                   children: [
@@ -72,16 +65,12 @@ class _HomePageState extends State<HomePage> {
                     if (_isLoading)
                       const Padding(
                         padding: EdgeInsets.all(32.0),
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
-                        ),
+                        child: CircularProgressIndicator(color: AppColors.primary),
                       )
                     else
                       _buildDataHeader(),
                     const SizedBox(height: 16),
-                    Expanded(
-                      child: _buildInfoCards(),
-                    ),
+                    Expanded(child: _buildInfoCards()),
                   ],
                 ),
               ),
@@ -103,28 +92,15 @@ class _HomePageState extends State<HomePage> {
             children: [
               Text(
                 widget.userName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              Text(
-                widget.userRole,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-              ),
+              Text(widget.userRole, style: const TextStyle(color: Colors.white, fontSize: 16)),
             ],
           ),
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white, size: 28),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsPage()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
             },
           ),
         ],
@@ -134,54 +110,14 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildMenuGrid() {
     final menuItems = [
-      _MenuItem(
-        icon: '📊',
-        label: 'CLIENT DISBURSEMENT',
-        subtitle: '',
-        route: 'client_disbursement',
-      ),
-      _MenuItem(
-        icon: '📄',
-        label: 'APPROVALS',
-        subtitle: '',
-        route: 'approvals',
-      ),
-      _MenuItem(
-        icon: '📋',
-        label: 'FOLLOW UP\nCLIENTS',
-        subtitle: '',
-        route: 'follow_up_clients',
-      ),
-      _MenuItem(
-        icon: '🛡️',
-        label: 'RECOVERY\nFORM',
-        subtitle: '',
-        route: 'recovery_form',
-      ),
-      _MenuItem(
-        icon: '⏰',
-        label: 'OVERDUE\nCLIENTS',
-        subtitle: '',
-        route: 'overdue_clients',
-      ),
-      _MenuItem(
-        icon: '👥',
-        label: 'CLIENTS\nNEARBY',
-        subtitle: '',
-        route: 'clients_nearby',
-      ),
-      _MenuItem(
-        icon: '📈',
-        label: 'REPORTS',
-        subtitle: '',
-        route: 'reports',
-      ),
-      _MenuItem(
-        icon: '📝',
-        label: 'LOAN\nTRACKING LIST',
-        subtitle: '',
-        route: 'loan_tracking_list',
-      ),
+      _MenuItem(icon: '📊', label: 'CLIENT DISBURSEMENT', subtitle: '', route: 'client_disbursement'),
+      _MenuItem(icon: '📄', label: 'APPROVALS', subtitle: '', route: 'approvals'),
+      _MenuItem(icon: '📋', label: 'FOLLOW UP\nCLIENTS', subtitle: '', route: 'follow_up_clients'),
+      _MenuItem(icon: '🛡️', label: 'RECOVERY\nFORM', subtitle: '', route: 'recovery_form'),
+      _MenuItem(icon: '⏰', label: 'OVERDUE\nCLIENTS', subtitle: '', route: 'overdue_clients'),
+      _MenuItem(icon: '👥', label: 'CLIENTS\nNEARBY', subtitle: '', route: 'clients_nearby'),
+      _MenuItem(icon: '📈', label: 'REPORTS', subtitle: '', route: 'reports'),
+      _MenuItem(icon: '📝', label: 'LOAN\nTRACKING LIST', subtitle: '', route: 'loan_tracking_list'),
     ];
 
     return Padding(
@@ -189,12 +125,7 @@ class _HomePageState extends State<HomePage> {
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          childAspectRatio: 0.85,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, childAspectRatio: 0.85, crossAxisSpacing: 12, mainAxisSpacing: 12),
         itemCount: menuItems.length,
         itemBuilder: (context, index) {
           return _buildMenuItem(menuItems[index]);
@@ -209,77 +140,34 @@ class _HomePageState extends State<HomePage> {
         // Navigate to specific pages based on route
         switch (item.route) {
           case 'client_disbursement':
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const DisbursementPage(),
-              ),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const DisbursementPage()));
             break;
           case 'approvals':
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ApprovalsPage(),
-              ),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ApprovalsPage()));
             break;
           case 'follow_up_clients':
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const FollowUpClientsPage(),
-              ),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const FollowUpClientsPage()));
             break;
           case 'recovery_form':
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const RecoveryFormPage(),
-              ),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const RecoveryFormPage()));
             break;
           case 'overdue_clients':
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const OverdueClientsPage(),
-              ),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const OverdueClientsPage()));
             break;
           case 'clients_nearby':
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ClientsNearbyPage(),
-              ),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientsNearbyPage()));
             break;
           case 'reports':
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ReportsPage(),
-              ),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsPage()));
             break;
-          case 'loan_trearing_list':
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const LoanTrackingListPage(),
-              ),
-            );
+          case 'loan_tracking_list':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const LoanTrackingListPage()));
             break;
           default:
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => MenuDetailPage(
-                  title: item.label.replaceAll('\n', ' '),
-                  icon: _getIconForRoute(item.route),
-                ),
+                builder: (_) => MenuDetailPage(title: item.label.replaceAll('\n', ' '), icon: _getIconForRoute(item.route)),
               ),
             );
         }
@@ -290,37 +178,20 @@ class _HomePageState extends State<HomePage> {
           Container(
             width: 60,
             height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                item.icon,
-                style: const TextStyle(fontSize: 32),
-              ),
-            ),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+            child: Center(child: Text(item.icon, style: const TextStyle(fontSize: 32))),
           ),
           const SizedBox(height: 8),
           Text(
             item.label,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              height: 1.2,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, height: 1.2),
           ),
           if (item.subtitle.isNotEmpty)
             Text(
               item.subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 8,
-                height: 1.2,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 8, height: 1.2),
             ),
         ],
       ),
@@ -332,20 +203,12 @@ class _HomePageState extends State<HomePage> {
       children: [
         Text(
           _selectedDataItem,
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         const Text(
           '0',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: 48,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: AppColors.primary, fontSize: 48, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -367,7 +230,7 @@ class _HomePageState extends State<HomePage> {
         return Icons.location_on;
       case 'reports':
         return Icons.assessment;
-      case 'loan_trearing_list':
+      case 'loan_tracking_list':
         return Icons.list_alt;
       default:
         return Icons.dashboard;
@@ -376,114 +239,24 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildInfoCards() {
     final cards = [
-      _InfoCard(
-        icon: Icons.location_on,
-        title: 'Active Areas',
-        color: AppColors.primary,
-        dataType: 'active_areas',
-      ),
-      _InfoCard(
-        icon: Icons.business,
-        title: 'Active Branches',
-        color: AppColors.primary,
-        dataType: 'active_branches',
-      ),
-      _InfoCard(
-        icon: Icons.people,
-        title: 'Active Clients',
-        color: AppColors.primary,
-        dataType: 'active_clients',
-      ),
-      _InfoCard(
-        icon: Icons.person,
-        title: 'Active CO',
-        color: AppColors.primary,
-        dataType: 'active_co',
-      ),
-      _InfoCard(
-        icon: Icons.home,
-        title: 'Active Villages',
-        color: AppColors.primary,
-        dataType: 'active_villages',
-      ),
-      _InfoCard(
-        icon: Icons.attach_money,
-        title: 'Amount Disbursed',
-        color: AppColors.primary,
-        dataType: 'amount_disbursed',
-      ),
-      _InfoCard(
-        icon: Icons.person_off,
-        title: 'Death Clients',
-        color: AppColors.primary,
-        dataType: 'death_clients',
-      ),
-      _InfoCard(
-        icon: Icons.store,
-        title: 'Disburs Centers',
-        color: AppColors.primary,
-        dataType: 'disburs_centers',
-      ),
-      _InfoCard(
-        icon: Icons.trending_up,
-        title: 'Disbursement Achievement',
-        color: AppColors.primary,
-        dataType: 'disbursement_achievement',
-      ),
-      _InfoCard(
-        icon: Icons.flag,
-        title: 'Disbursement Target',
-        color: AppColors.primary,
-        dataType: 'disbursement_target',
-      ),
-      _InfoCard(
-        icon: Icons.folder_open,
-        title: 'File in Process',
-        color: AppColors.primary,
-        dataType: 'file_in_process',
-      ),
-      _InfoCard(
-        icon: Icons.folder,
-        title: 'File Submitted',
-        color: AppColors.primary,
-        dataType: 'file_submitted',
-      ),
-      _InfoCard(
-        icon: Icons.cancel,
-        title: 'No Loan Disbursed',
-        color: AppColors.primary,
-        dataType: 'no_loan_disbursed',
-      ),
-      _InfoCard(
-        icon: Icons.access_time,
-        title: 'Overdue Clients',
-        color: AppColors.primary,
-        dataType: 'overdue_clients',
-      ),
-      _InfoCard(
-        icon: Icons.pie_chart,
-        title: 'PAR',
-        color: AppColors.primary,
-        dataType: 'par',
-      ),
-      _InfoCard(
-        icon: Icons.check_circle,
-        title: 'Recovery Achievement',
-        color: AppColors.primary,
-        dataType: 'recovery_achievement',
-      ),
-      _InfoCard(
-        icon: Icons.calendar_today,
-        title: 'Recovery Target Till Date',
-        color: AppColors.primary,
-        dataType: 'recovery_target_till_date',
-      ),
-      _InfoCard(
-        icon: Icons.calendar_month,
-        title: 'Recovery Till Date',
-        color: AppColors.primary,
-        dataType: 'recovery_till_date',
-      ),
+      _InfoCard(icon: Icons.location_on, title: 'Active Areas', color: AppColors.primary, dataType: 'active_areas'),
+      _InfoCard(icon: Icons.business, title: 'Active Branches', color: AppColors.primary, dataType: 'active_branches'),
+      _InfoCard(icon: Icons.people, title: 'Active Clients', color: AppColors.primary, dataType: 'active_clients'),
+      _InfoCard(icon: Icons.person, title: 'Active CO', color: AppColors.primary, dataType: 'active_co'),
+      _InfoCard(icon: Icons.home, title: 'Active Villages', color: AppColors.primary, dataType: 'active_villages'),
+      _InfoCard(icon: Icons.attach_money, title: 'Amount Disbursed', color: AppColors.primary, dataType: 'amount_disbursed'),
+      _InfoCard(icon: Icons.person_off, title: 'Death Clients', color: AppColors.primary, dataType: 'death_clients'),
+      _InfoCard(icon: Icons.store, title: 'Disburs Centers', color: AppColors.primary, dataType: 'disburs_centers'),
+      _InfoCard(icon: Icons.trending_up, title: 'Disbursement Achievement', color: AppColors.primary, dataType: 'disbursement_achievement'),
+      _InfoCard(icon: Icons.flag, title: 'Disbursement Target', color: AppColors.primary, dataType: 'disbursement_target'),
+      _InfoCard(icon: Icons.folder_open, title: 'File in Process', color: AppColors.primary, dataType: 'file_in_process'),
+      _InfoCard(icon: Icons.folder, title: 'File Submitted', color: AppColors.primary, dataType: 'file_submitted'),
+      _InfoCard(icon: Icons.cancel, title: 'No Loan Disbursed', color: AppColors.primary, dataType: 'no_loan_disbursed'),
+      _InfoCard(icon: Icons.access_time, title: 'Overdue Clients', color: AppColors.primary, dataType: 'overdue_clients'),
+      _InfoCard(icon: Icons.pie_chart, title: 'PAR', color: AppColors.primary, dataType: 'par'),
+      _InfoCard(icon: Icons.check_circle, title: 'Recovery Achievement', color: AppColors.primary, dataType: 'recovery_achievement'),
+      _InfoCard(icon: Icons.calendar_today, title: 'Recovery Target Till Date', color: AppColors.primary, dataType: 'recovery_target_till_date'),
+      _InfoCard(icon: Icons.calendar_month, title: 'Recovery Till Date', color: AppColors.primary, dataType: 'recovery_till_date'),
     ];
 
     return ListView.builder(
@@ -498,14 +271,11 @@ class _HomePageState extends State<HomePage> {
               _isLoading = true;
             });
             _simulateLoading();
-            
+
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => DataDetailPage(
-                  title: card.title,
-                  dataType: card.dataType,
-                ),
+                builder: (_) => DataDetailPage(title: card.title, dataType: card.dataType),
               ),
             );
           },
@@ -515,38 +285,21 @@ class _HomePageState extends State<HomePage> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
             ),
             child: Row(
               children: [
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(
-                    color: card.color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    card.icon,
-                    color: card.color,
-                    size: 24,
-                  ),
+                  decoration: BoxDecoration(color: card.color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: Icon(card.icon, color: card.color, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     card.title,
-                    style: TextStyle(
-                      color: card.color,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(color: card.color, fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -564,12 +317,7 @@ class _MenuItem {
   final String subtitle;
   final String route;
 
-  _MenuItem({
-    required this.icon,
-    required this.label,
-    this.subtitle = '',
-    required this.route,
-  });
+  _MenuItem({required this.icon, required this.label, this.subtitle = '', required this.route});
 }
 
 class _InfoCard {
@@ -578,10 +326,5 @@ class _InfoCard {
   final Color color;
   final String dataType;
 
-  _InfoCard({
-    required this.icon,
-    required this.title,
-    required this.color,
-    required this.dataType,
-  });
+  _InfoCard({required this.icon, required this.title, required this.color, required this.dataType});
 }

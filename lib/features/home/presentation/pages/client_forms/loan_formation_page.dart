@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../widgets/custom_dropdown.dart';
+import 'client_business_info_page.dart';
 
 class LoanFormationPage extends StatefulWidget {
   final String clientName;
@@ -9,13 +10,7 @@ class LoanFormationPage extends StatefulWidget {
   final String? cnic;
   final String? memberId;
 
-  const LoanFormationPage({
-    super.key,
-    required this.clientName,
-    required this.clientId,
-    this.cnic,
-    this.memberId,
-  });
+  const LoanFormationPage({super.key, required this.clientName, required this.clientId, this.cnic, this.memberId});
 
   @override
   State<LoanFormationPage> createState() => _LoanFormationPageState();
@@ -52,36 +47,13 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
     'CED',
   ];
 
-  final List<String> _subProductOptions = [
-    'Select Sub Product',
-    'CED',
-  ];
+  final List<String> _subProductOptions = ['Select Sub Product', 'CED'];
 
-  final List<String> _phasePartnerOptions = [
-    'Select Phase/Partner',
-    'NBP',
-    'Atta Chaki',
-  ];
+  final List<String> _phasePartnerOptions = ['Select Phase/Partner', 'NBP', 'Atta Chaki'];
 
-  final List<String> _sectorOptions = [
-    'Select Sector',
-    'Handi Craft',
-    'Trading Business',
-    'Agriculture',
-    'Manufacturing',
-    'Others',
-    'Live Stock',
-  ];
+  final List<String> _sectorOptions = ['Select Sector', 'Handi Craft', 'Trading Business', 'Agriculture', 'Manufacturing', 'Others', 'Live Stock'];
 
-  final List<String> _loanUtilizationOptions = [
-    'Select Utilization',
-    'LiveStock',
-    'Goat',
-    'Sheep',
-    'Cow',
-    'Buffalo',
-    'Live Stock',
-  ];
+  final List<String> _loanUtilizationOptions = ['Select Utilization', 'LiveStock', 'Goat', 'Sheep', 'Cow', 'Buffalo', 'Live Stock'];
 
   final List<String> _customerProductOptions = [
     'Select Customer and Product',
@@ -121,10 +93,7 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
     'High Ranked Judicial Officials i.e Ju',
   ];
 
-  final List<String> _deliveryChannelOptions = [
-    'Select Delivery Channel',
-    'COC',
-  ];
+  final List<String> _deliveryChannelOptions = ['Select Delivery Channel', 'COC'];
 
   @override
   void initState() {
@@ -151,23 +120,13 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildUserInfoCard(),
-                      const SizedBox(height: 24),
-                      _buildFormFields(),
-                      const SizedBox(height: 32),
-                      _buildNextButton(),
-                      const SizedBox(height: 16),
-                    ],
+                    children: [_buildUserInfoCard(), const SizedBox(height: 24), _buildFormFields(), const SizedBox(height: 32), _buildNextButton(), const SizedBox(height: 16)],
                   ),
                 ),
               ),
@@ -191,13 +150,9 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
           ),
           const Expanded(
             child: Text(
-              'Loan Formation',
+              'Loan Formation Information',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
           IconButton(
@@ -218,13 +173,7 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
       ),
       child: Column(
         children: [
@@ -235,11 +184,7 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
                 child: Text(
                   'Saima Test | Credit Officer | Multan 2',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.w500),
                 ),
               ),
               IconButton(
@@ -259,21 +204,11 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
               Expanded(
                 child: Column(
                   children: [
-                    const Text(
-                      'Name',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                      ),
-                    ),
+                    const Text('Name', style: TextStyle(fontSize: 12, color: Colors.black87)),
                     const SizedBox(height: 4),
                     Text(
                       widget.clientName,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -281,21 +216,11 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
               Expanded(
                 child: Column(
                   children: [
-                    const Text(
-                      'CNIC',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                      ),
-                    ),
+                    const Text('CNIC', style: TextStyle(fontSize: 12, color: Colors.black87)),
                     const SizedBox(height: 4),
                     Text(
                       widget.cnic ?? widget.clientId,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -303,21 +228,11 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
               Expanded(
                 child: Column(
                   children: [
-                    const Text(
-                      'ID',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                      ),
-                    ),
+                    const Text('ID', style: TextStyle(fontSize: 12, color: Colors.black87)),
                     const SizedBox(height: 4),
                     Text(
                       widget.memberId ?? widget.clientId,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -327,11 +242,7 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
           const SizedBox(height: 16),
           Text(
             'Loan Formation',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, color: AppColors.primary, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -385,11 +296,7 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
         const SizedBox(height: 16),
 
         // Member ID text field
-        _buildTextField(
-          label: 'Member ID',
-          controller: _memberIdController,
-          readOnly: true,
-        ),
+        _buildTextField(label: 'Member ID', controller: _memberIdController, readOnly: true),
         const SizedBox(height: 16),
 
         // Loan Demand text field
@@ -397,10 +304,7 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
           label: 'Loan Demand',
           controller: _loanDemandController,
           keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            ThousandsSeparatorInputFormatter(),
-          ],
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
         ),
         const SizedBox(height: 16),
 
@@ -433,20 +337,13 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
         const SizedBox(height: 24),
 
         // Divider
-        Divider(
-          color: Colors.grey.shade300,
-          thickness: 1,
-        ),
+        Divider(color: Colors.grey.shade300, thickness: 1),
         const SizedBox(height: 16),
 
         // Risk Based Assessment section
         Text(
           'Risk Based Assessment (RBA)',
-          style: TextStyle(
-            fontSize: 16,
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 16, color: AppColors.primary, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
 
@@ -508,21 +405,14 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.black87,
-            fontWeight: FontWeight.normal,
-          ),
+          style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.normal),
         ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            border: Border.all(
-              color: Colors.grey.shade300,
-              width: 1,
-            ),
+            border: Border.all(color: Colors.grey.shade300, width: 1),
             borderRadius: BorderRadius.circular(4),
           ),
           child: TextField(
@@ -530,15 +420,8 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
             keyboardType: keyboardType,
             inputFormatters: inputFormatters,
             readOnly: readOnly,
-            style: TextStyle(
-              fontSize: 14,
-              color: readOnly ? AppColors.primary : Colors.black87,
-            ),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
+            style: TextStyle(fontSize: 14, color: readOnly ? AppColors.primary : Colors.black87),
+            decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
           ),
         ),
       ],
@@ -550,11 +433,10 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
-          // You can add validation here if needed
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Loan Formation information saved'),
-              backgroundColor: AppColors.primary,
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ClientBusinessInfoPage(clientName: widget.clientName, clientId: widget.clientId, cnic: widget.cnic, memberId: widget.memberId),
             ),
           );
         },
@@ -562,17 +444,9 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: const Text(
-          'Next',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        child: const Text('Next', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -581,10 +455,7 @@ class _LoanFormationPageState extends State<LoanFormationPage> {
 // Input formatter for thousands separator
 class ThousandsSeparatorInputFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.text.isEmpty) {
       return newValue;
     }

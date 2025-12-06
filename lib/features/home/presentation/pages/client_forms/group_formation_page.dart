@@ -9,13 +9,7 @@ class GroupFormationPage extends StatefulWidget {
   final String? cnic;
   final String? memberId;
 
-  const GroupFormationPage({
-    super.key,
-    required this.clientName,
-    required this.clientId,
-    this.cnic,
-    this.memberId,
-  });
+  const GroupFormationPage({super.key, required this.clientName, required this.clientId, this.cnic, this.memberId});
 
   @override
   State<GroupFormationPage> createState() => _GroupFormationPageState();
@@ -24,11 +18,7 @@ class GroupFormationPage extends StatefulWidget {
 class _GroupFormationPageState extends State<GroupFormationPage> {
   String? _selectedMethodology;
 
-  final List<String> _methodologyOptions = [
-    'Select Methodology',
-    'Individual',
-    'Group',
-  ];
+  final List<String> _methodologyOptions = ['Select Methodology', 'Individual', 'Group'];
 
   @override
   Widget build(BuildContext context) {
@@ -42,10 +32,7 @@ class _GroupFormationPageState extends State<GroupFormationPage> {
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
                 ),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16.0),
@@ -85,16 +72,15 @@ class _GroupFormationPageState extends State<GroupFormationPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const SizedBox(width: 48), // Balance the home icon
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
           const Expanded(
             child: Text(
               'Group Formation',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
           IconButton(
@@ -115,13 +101,7 @@ class _GroupFormationPageState extends State<GroupFormationPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
       ),
       child: Column(
         children: [
@@ -132,11 +112,7 @@ class _GroupFormationPageState extends State<GroupFormationPage> {
                 child: Text(
                   'Saima Test | Credit Officer | Multan 2',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.w500),
                 ),
               ),
               IconButton(
@@ -156,21 +132,11 @@ class _GroupFormationPageState extends State<GroupFormationPage> {
               Expanded(
                 child: Column(
                   children: [
-                    const Text(
-                      'Name',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                      ),
-                    ),
+                    const Text('Name', style: TextStyle(fontSize: 12, color: Colors.black87)),
                     const SizedBox(height: 4),
                     Text(
                       widget.clientName,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -178,21 +144,11 @@ class _GroupFormationPageState extends State<GroupFormationPage> {
               Expanded(
                 child: Column(
                   children: [
-                    const Text(
-                      'CNIC',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                      ),
-                    ),
+                    const Text('CNIC', style: TextStyle(fontSize: 12, color: Colors.black87)),
                     const SizedBox(height: 4),
                     Text(
                       widget.cnic ?? widget.clientId,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -200,21 +156,11 @@ class _GroupFormationPageState extends State<GroupFormationPage> {
               Expanded(
                 child: Column(
                   children: [
-                    const Text(
-                      'ID',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                      ),
-                    ),
+                    const Text('ID', style: TextStyle(fontSize: 12, color: Colors.black87)),
                     const SizedBox(height: 4),
                     Text(
                       widget.memberId ?? widget.clientId,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -224,11 +170,7 @@ class _GroupFormationPageState extends State<GroupFormationPage> {
           const SizedBox(height: 16),
           Text(
             'Group Formation',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, color: AppColors.primary, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -239,18 +181,12 @@ class _GroupFormationPageState extends State<GroupFormationPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _selectedMethodology != null &&
-                _selectedMethodology != 'Select Methodology'
+        onPressed: _selectedMethodology != null && _selectedMethodology != 'Select Methodology'
             ? () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => LoanFormationPage(
-                      clientName: widget.clientName,
-                      clientId: widget.clientId,
-                      cnic: widget.cnic,
-                      memberId: widget.memberId,
-                    ),
+                    builder: (context) => LoanFormationPage(clientName: widget.clientName, clientId: widget.clientId, cnic: widget.cnic, memberId: widget.memberId),
                   ),
                 );
               }
@@ -259,19 +195,11 @@ class _GroupFormationPageState extends State<GroupFormationPage> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           disabledBackgroundColor: Colors.grey.shade300,
           disabledForegroundColor: Colors.grey.shade600,
         ),
-        child: const Text(
-          'Next',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        child: const Text('Next', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       ),
     );
   }

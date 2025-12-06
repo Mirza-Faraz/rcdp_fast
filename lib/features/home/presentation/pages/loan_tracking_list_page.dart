@@ -12,37 +12,17 @@ class LoanTrackingListPage extends StatefulWidget {
 class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
   int _currentPage = 1;
   List<Map<String, dynamic>> _loans = [
-    {
-      'sr': '1',
-      'cnic': '35202-4175458-5',
-      'id': '9042000003',
-      'name': 'Test',
-      'amount': '8255558',
-      'isApproved': 'No',
-      'isPosted': 'Not Posted',
-      'approvalProgress': '4/0',
-      'clientStatus': '-',
-    },
+    {'sr': '1', 'cnic': '35202-4175458-5', 'id': '9042000003', 'name': 'Faraz', 'amount': '8255558', 'isApproved': 'No', 'isPosted': 'Not Posted', 'approvalProgress': '4/0'},
   ];
   Map<String, dynamic>? _appliedFilters;
   final ScrollController _headerScrollController = ScrollController();
   final ScrollController _bodyScrollController = ScrollController();
   bool _hasShownEmptyMessage = false;
 
-  final List<String> _columnHeaders = [
-    'Sr#',
-    'CNIC',
-    'Id',
-    'Name',
-    'Amount',
-    'Is Approved',
-    'Is Posted',
-    'Approval Progress',
-    'Client Status',
-  ];
+  final List<String> _columnHeaders = ['Sr#', 'CNIC', 'Id', 'Name', 'Amount', 'Is Approved', 'Is Posted', 'Approval Progress'];
 
   final List<double> _columnWidths = [
-    60,  // Sr#
+    60, // Sr#
     140, // CNIC
     120, // Id
     120, // Name
@@ -50,7 +30,6 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
     120, // Is Approved
     120, // Is Posted
     140, // Approval Progress
-    120, // Client Status
   ];
 
   @override
@@ -58,39 +37,25 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
     super.initState();
     _headerScrollController.addListener(_syncHeaderToBody);
     _bodyScrollController.addListener(_syncBodyToHeader);
-    // Load sample data immediately
     _loadSampleData();
   }
 
   void _loadSampleData() {
-    // Sample data matching the screenshots
     setState(() {
       _loans = [
-        {
-          'sr': '1',
-          'cnic': '35202-4175458-5',
-          'id': '9042000003',
-          'name': 'Test',
-          'amount': '8255558',
-          'isApproved': 'No',
-          'isPosted': 'Not Posted',
-          'approvalProgress': '4/0',
-          'clientStatus': '-',
-        },
+        {'sr': '1', 'cnic': '35202-4175458-5', 'id': '9042000003', 'name': 'Faraz', 'amount': '8255558', 'isApproved': 'No', 'isPosted': 'Not Posted', 'approvalProgress': '4/0'},
       ];
     });
   }
 
   void _syncHeaderToBody() {
-    if (_bodyScrollController.hasClients &&
-        _headerScrollController.offset != _bodyScrollController.offset) {
+    if (_bodyScrollController.hasClients && _headerScrollController.offset != _bodyScrollController.offset) {
       _bodyScrollController.jumpTo(_headerScrollController.offset);
     }
   }
 
   void _syncBodyToHeader() {
-    if (_headerScrollController.hasClients &&
-        _bodyScrollController.offset != _headerScrollController.offset) {
+    if (_headerScrollController.hasClients && _bodyScrollController.offset != _headerScrollController.offset) {
       _headerScrollController.jumpTo(_bodyScrollController.offset);
     }
   }
@@ -111,11 +76,7 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
           children: [
             _buildHeader(),
             _buildTableHeader(),
-            Expanded(
-              child: _loans.isEmpty
-                  ? _buildEmptyState()
-                  : _buildTableContent(),
-            ),
+            Expanded(child: _loans.isEmpty ? _buildEmptyState() : _buildTableContent()),
             _buildRecordFoundFooter(),
             _buildPaginationFooter(),
           ],
@@ -133,12 +94,7 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
             margin: const EdgeInsets.only(top: 0),
             decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(0),
-                bottomRight: Radius.circular(20),
-                topLeft: Radius.circular(0),
-                topRight: Radius.circular(20),
-              ),
+              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(0), bottomRight: Radius.circular(20), topLeft: Radius.circular(0), topRight: Radius.circular(20)),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -151,20 +107,10 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
                     children: [
                       const Text(
                         'Loan Tracking',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: AppColors.primary, fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        'Page $_currentPage, ${_loans.length} rows',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
+                      Text('Page $_currentPage, ${_loans.length} rows', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
                     ],
                   ),
                   Row(
@@ -178,29 +124,15 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
                                 });
                               }
                             : null,
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
+                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                         child: Text(
                           '<<Previous',
-                          style: TextStyle(
-                            color: _currentPage > 1
-                                ? AppColors.primary
-                                : Colors.grey,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: _currentPage > 1 ? AppColors.primary : Colors.grey, fontWeight: FontWeight.w500, fontSize: 14),
                         ),
                       ),
                       IconButton(
                         onPressed: () => _openFilters(),
-                        icon: Icon(
-                          Icons.filter_list,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
+                        icon: Icon(Icons.filter_list, color: AppColors.primary, size: 24),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
@@ -210,18 +142,10 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
                             _currentPage++;
                           });
                         },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
+                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                         child: const Text(
                           'Next>>',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500, fontSize: 14),
                         ),
                       ),
                     ],
@@ -248,11 +172,7 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
               child: Text(
                 _columnHeaders[index],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
               ),
             );
@@ -269,12 +189,7 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
         final loan = _loans[rowIndex];
         return Container(
           decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.grey.shade200,
-                width: 1,
-              ),
-            ),
+            border: Border(bottom: BorderSide(color: Colors.grey.shade200, width: 1)),
           ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -288,12 +203,7 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
                   padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                   child: Text(
                     loan[dataKey]?.toString() ?? '-',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: (header == 'CNIC' || header == 'Id' || header == 'Name')
-                          ? AppColors.primary
-                          : Colors.black87,
-                    ),
+                    style: TextStyle(fontSize: 14, color: (header == 'CNIC' || header == 'Id' || header == 'Name') ? AppColors.primary : Colors.black87),
                     overflow: TextOverflow.ellipsis,
                   ),
                 );
@@ -323,25 +233,16 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
         return 'isPosted';
       case 'Approval Progress':
         return 'approvalProgress';
-      case 'Client Status':
-        return 'clientStatus';
       default:
         return header.toLowerCase().replaceAll(' ', '');
     }
   }
 
   Widget _buildEmptyState() {
-    // Show popup message when there's no data (only once)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_loans.isEmpty && mounted && !_hasShownEmptyMessage) {
         _hasShownEmptyMessage = true;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Record not Found'),
-            backgroundColor: AppColors.primary,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Record not Found'), backgroundColor: AppColors.primary, duration: const Duration(seconds: 2)));
       }
     });
 
@@ -353,25 +254,13 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
           Container(
             width: 80,
             height: 80,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: Text(
-                '📝',
-                style: TextStyle(fontSize: 48),
-              ),
-            ),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+            child: const Center(child: Text('📝', style: TextStyle(fontSize: 48))),
           ),
           const SizedBox(height: 16),
           const Text(
             'Loan Tracking',
-            style: TextStyle(
-              color: AppColors.primary,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -387,11 +276,7 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
         children: [
           Text(
             'Record Found',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -415,19 +300,10 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
                 : null,
             child: Text(
               '<<Previous',
-              style: TextStyle(
-                color: _currentPage > 1 ? AppColors.primary : Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(color: _currentPage > 1 ? AppColors.primary : Colors.grey, fontWeight: FontWeight.w500),
             ),
           ),
-          Text(
-            'Page $_currentPage, ${_loans.length} rows',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 14,
-            ),
-          ),
+          Text('Page $_currentPage, ${_loans.length} rows', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
           TextButton(
             onPressed: () {
               setState(() {
@@ -436,10 +312,7 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
             },
             child: const Text(
               'Next>>',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -448,23 +321,16 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
   }
 
   void _openFilters() async {
-    final filters = await Navigator.push<Map<String, dynamic>>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const ApplyFiltersPage(),
-      ),
-    );
+    final filters = await Navigator.push<Map<String, dynamic>>(context, MaterialPageRoute(builder: (context) => const ApplyFiltersPage()));
 
     if (filters != null) {
       setState(() {
         _appliedFilters = filters;
         _currentPage = 1;
-        _hasShownEmptyMessage = false; // Reset flag to show message again if needed
+        _hasShownEmptyMessage = false;
       });
-      // Reload data after applying filters
       _loadSampleData();
       debugPrint('Filters applied: $_appliedFilters');
     }
   }
 }
-

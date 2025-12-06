@@ -40,9 +40,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
     if (_searchQuery == null || _searchQuery!.isEmpty) {
       return widget.items;
     }
-    return widget.items
-        .where((item) => item.toLowerCase().contains(_searchQuery!.toLowerCase()))
-        .toList();
+    return widget.items.where((item) => item.toLowerCase().contains(_searchQuery!.toLowerCase())).toList();
   }
 
   void _showDropdown(BuildContext context) {
@@ -88,11 +86,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
       children: [
         Text(
           widget.label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.black87,
-            fontWeight: FontWeight.normal,
-          ),
+          style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.normal),
         ),
         const SizedBox(height: 8),
         GestureDetector(
@@ -101,10 +95,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border.all(
-                color: _isOpen ? AppColors.primary : Colors.grey.shade300,
-                width: _isOpen ? 2 : 1,
-              ),
+              border: Border.all(color: _isOpen ? AppColors.primary : Colors.grey.shade300, width: _isOpen ? 2 : 1),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
@@ -113,20 +104,11 @@ class _CustomDropdownState extends State<CustomDropdown> {
                 Expanded(
                   child: Text(
                     widget.selectedValue ?? widget.hintText,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: widget.selectedValue == null
-                          ? Colors.grey.shade400
-                          : Colors.black87,
-                    ),
+                    style: TextStyle(fontSize: 14, color: widget.selectedValue == null ? Colors.grey.shade400 : Colors.black87),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Icon(
-                  _isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                  color: Colors.black87,
-                  size: 24,
-                ),
+                Icon(_isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.black87, size: 24),
               ],
             ),
           ),
@@ -164,10 +146,7 @@ class _DropdownModalState extends State<_DropdownModal> {
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-        ),
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
       ),
       child: Column(
         children: [
@@ -184,19 +163,13 @@ class _DropdownModalState extends State<_DropdownModal> {
                       decoration: InputDecoration(
                         hintText: 'Search...',
                         prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       onChanged: widget.onSearchChanged,
                     ),
                   ),
                 if (widget.searchable) const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.home),
-                  onPressed: () => Navigator.pop(context),
-                  iconSize: 24,
-                ),
+                IconButton(icon: const Icon(Icons.home), onPressed: () => Navigator.pop(context), iconSize: 24),
               ],
             ),
           ),
@@ -210,22 +183,11 @@ class _DropdownModalState extends State<_DropdownModal> {
                 return InkWell(
                   onTap: () => widget.onSelected(item),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primary.withOpacity(0.1)
-                          : Colors.white,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.white),
                     child: Text(
                       item,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: Colors.black87,
-                      ),
+                      style: TextStyle(fontSize: 14, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: Colors.black87),
                     ),
                   ),
                 );
