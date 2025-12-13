@@ -5,6 +5,7 @@ import '../../../home/presentation/pages/home_page.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
+import '../widgets/change_password_dialog.dart';
 
 class LoginPage extends StatelessWidget {
   final String username;
@@ -127,7 +128,12 @@ class _LoginViewState extends State<LoginView> {
                         ),
                         TextButton(
                           onPressed: () {
-                            // TODO: Implement change password
+                            showDialog(
+                              context: context,
+                              builder: (context) => ChangePasswordDialog(
+                                username: _usernameController.text.trim(),
+                              ),
+                            );
                           },
                           child: const Text(
                             'Click here',
