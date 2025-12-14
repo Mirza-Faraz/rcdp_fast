@@ -120,21 +120,36 @@ class _HomePageState extends State<HomePage> {
       _MenuItem(icon: '📝', label: 'LOAN\nTRACKING LIST', subtitle: '', route: 'loan_tracking_list'),
     ];
 
+    // Fixed icon size for consistency across all items (works for both iOS and Android)
+    final iconSize = 60.0;
+    
+    // Responsive font size based on screen width
+    final screenWidth = MediaQuery.of(context).size.width;
+    final fontSize = screenWidth < 380 ? 9.0 : (screenWidth < 420 ? 10.0 : 10.0);
+    
+    // Calculate spacing for 4 columns
+    final crossAxisSpacing = 12.0;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, childAspectRatio: 0.85, crossAxisSpacing: 12, mainAxisSpacing: 12),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          childAspectRatio: 0.85, // Optimized for 4-column layout with icon and text
+          crossAxisSpacing: crossAxisSpacing,
+          mainAxisSpacing: crossAxisSpacing,
+        ),
         itemCount: menuItems.length,
         itemBuilder: (context, index) {
-          return _buildMenuItem(menuItems[index]);
+          return _buildMenuItem(menuItems[index], iconSize: iconSize, fontSize: fontSize);
         },
       ),
     );
   }
 
-  Widget _buildMenuItem(_MenuItem item) {
+  Widget _buildMenuItem(_MenuItem item, {required double iconSize, required double fontSize}) {
     return GestureDetector(
       onTap: () {
         // Navigate to specific pages based on route
@@ -174,24 +189,46 @@ class _HomePageState extends State<HomePage> {
       },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-            child: Center(child: Text(item.icon, style: const TextStyle(fontSize: 32))),
+            width: iconSize,
+            height: iconSize,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                item.icon,
+                style: const TextStyle(fontSize: 30), // Fixed emoji size for consistency
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            item.label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, height: 1.2),
+          SizedBox(height: iconSize * 0.15), // Responsive spacing
+          Flexible(
+            child: Text(
+              item.label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+                height: 1.2,
+              ),
+            ),
           ),
           if (item.subtitle.isNotEmpty)
             Text(
               item.subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 8, height: 1.2),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize * 0.8,
+                height: 1.2,
+              ),
             ),
         ],
       ),
