@@ -11,6 +11,7 @@ import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/get_saved_username_usecase.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/domain/usecases/save_username_usecase.dart';
+import 'features/auth/domain/usecases/get_profile_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 final sl = GetIt.instance;
@@ -18,42 +19,25 @@ final sl = GetIt.instance;
 Future<void> init() async {
   //! Features - Auth
   // Bloc
-  sl.registerFactory(
-    () => AuthBloc(
-      loginUseCase: sl(),
-      saveUsernameUseCase: sl(),
-      getSavedUsernameUseCase: sl(),
-    ),
-  );
+  sl.registerFactory(() => AuthBloc(loginUseCase: sl(), saveUsernameUseCase: sl(), getSavedUsernameUseCase: sl()));
 
   // Use cases
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => SaveUsernameUseCase(sl()));
   sl.registerLazySingleton(() => GetSavedUsernameUseCase(sl()));
+  sl.registerLazySingleton(() => GetProfileUseCase(sl()));
 
   // Repository
-  sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(
-      remoteDataSource: sl(),
-      localDataSource: sl(),
-      networkInfo: sl(),
-    ),
-  );
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(remoteDataSource: sl(), localDataSource: sl(), networkInfo: sl()));
 
   // Data sources
-  sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(apiClient: sl()),
-  );
-  
-  sl.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
-  );
+  sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(apiClient: sl()));
+
+  sl.registerLazySingleton<AuthLocalDataSource>(() => AuthLocalDataSourceImpl(sharedPreferences: sl()));
 
   //! Core
   sl.registerLazySingleton(() => ApiClient());
-  sl.registerLazySingleton<NetworkInfo>(
-    () => NetworkInfoImpl(sl()),
-  );
+  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
 
   //! External
   final sharedPreferences = await SharedPreferences.getInstance();

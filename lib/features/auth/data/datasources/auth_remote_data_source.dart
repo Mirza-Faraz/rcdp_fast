@@ -1,13 +1,16 @@
+import 'package:dio/dio.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/login_request_model.dart';
 import '../models/login_response_model.dart';
+import '../models/profile_response_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponseModel> login(LoginRequestModel request);
   Future<void> logout();
   Future<void> changePassword(String username, String oldPassword, String newPassword);
+  Future<ProfileResponseModel> getProfile(int userId, {required String token});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -19,21 +22,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<LoginResponseModel> login(LoginRequestModel request) async {
     try {
       // Make POST request to login endpoint
-      final response = await apiClient.post(
-        ApiEndpoints.login,
-        data: request.toJson(),
-      );
+      final response = await apiClient.post(ApiEndpoints.login, data: request.toJson());
 
       // Check if response is successful
       if (response.statusCode == 200 || response.statusCode == 201) {
         // Parse the response
         final loginResponse = LoginResponseModel.fromJson(response.data);
-        
+
         // If login is successful, save the token
-        if (loginResponse.success && loginResponse.token != null) {
-          apiClient.setAuthToken(loginResponse.token!);
+        if (loginResponse.success && loginResponse.token.isNotEmpty) {
+          apiClient.setAuthToken(loginResponse.token);
         }
-        
+
         return loginResponse;
       } else {
         throw ServerException('Login failed: ${response.data['message'] ?? 'Unknown error'}');
@@ -63,25 +63,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> changePassword(
-    String username,
-    String oldPassword,
-    String newPassword,
-  ) async {
+  Future<void> changePassword(String username, String oldPassword, String newPassword) async {
     try {
-      final response = await apiClient.post(
-        ApiEndpoints.changePassword,
-        data: {
-          'username': username,
-          'oldPassword': oldPassword,
-          'newPassword': newPassword,
-        },
-      );
+      final response = await apiClient.post(ApiEndpoints.changePassword, data: {'username': username, 'oldPassword': oldPassword, 'newPassword': newPassword});
 
       if (response.statusCode != 200 && response.statusCode != 201) {
-        throw ServerException(
-          response.data['message'] ?? 'Failed to change password',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to change password');
       }
     } catch (e) {
       if (e is ServerException || e is NetworkException) {
@@ -90,6 +77,33 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw ServerException('An error occurred while changing password: ${e.toString()}');
     }
   }
+
+  @override
+  Future<ProfileResponseModel> getProfile(int userId, {required String token}) async {
+    try {
+      // Make GET request to profile endpoint with User_ID parameter
+      final response = await apiClient.get(
+        ApiEndpoints.getUserProfile,
+        queryParameters: {'User_ID': userId},
+        options: Options(headers: {'Authorization': token}),
+      );
+
+      // Check if response is successful
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Parse the response
+        final profileResponse = ProfileResponseModel.fromJson(response.data);
+        return profileResponse;
+      } else {
+        final errorMessage = response.data != null && response.data is Map
+            ? (response.data as Map)['message'] ?? 'Unknown error'
+            : 'Failed to get profile. Status code: ${response.statusCode}';
+        throw ServerException('Failed to get profile: $errorMessage');
+      }
+    } catch (e) {
+      if (e is ServerException || e is NetworkException) {
+        rethrow;
+      }
+      throw ServerException('An error occurred while getting profile: ${e.toString()}');
+    }
+  }
 }
-
-

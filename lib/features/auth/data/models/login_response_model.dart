@@ -1,84 +1,103 @@
 import 'package:equatable/equatable.dart';
+import 'dart:convert';
 import '../../domain/entities/user_entity.dart';
 
 class LoginResponseModel extends Equatable {
   final bool success;
-  final String message;
-  final String? token;
-  final String? refreshToken;
-  final UserDataModel? user;
+  final String token;
+  final UserDescriptionModel userDescription;
 
-  const LoginResponseModel({
-    required this.success,
-    required this.message,
-    this.token,
-    this.refreshToken,
-    this.user,
-  });
+  const LoginResponseModel({required this.success, required this.token, required this.userDescription});
 
   // Factory constructor to create from JSON response
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
     return LoginResponseModel(
       success: json['success'] ?? false,
-      message: json['message'] ?? '',
-      token: json['token'],
-      refreshToken: json['refreshToken'],
-      user: json['user'] != null ? UserDataModel.fromJson(json['user']) : null,
+      token: json['token'] ?? '',
+      userDescription: json['UserDescription'] != null ? UserDescriptionModel.fromJson(json['UserDescription']) : UserDescriptionModel.empty(),
     );
   }
 
+  // Convert to JSON (for storage)
+  Map<String, dynamic> toJson() {
+    return {'success': success, 'token': token, 'UserDescription': userDescription.toJson()};
+  }
+
   // Convert to Entity (optional, if you need to convert to domain entity)
-  UserEntity? toEntity() {
-    if (user != null) {
-      return UserEntity(
-        username: user!.username,
-        password: '', // Never store password in entity
-      );
-    }
-    return null;
+  UserEntity toEntity() {
+    return UserEntity(
+      username: userDescription.userName,
+      password: '', // Never store password in entity
+    );
   }
 
   @override
-  List<Object?> get props => [success, message, token, refreshToken, user];
+  List<Object?> get props => [success, token, userDescription];
 }
 
-class UserDataModel extends Equatable {
-  final String username;
-  final String userId;
-  final String? email;
-  final String? role;
-  final String? name;
+class UserDescriptionModel extends Equatable {
+  final String designation;
+  final String userBranch;
+  final String userName;
+  final int userId;
+  final int designationId;
+  final int groupId;
+  final int businessInfoReq;
+  final int loadUtByProduct;
 
-  const UserDataModel({
-    required this.username,
+  const UserDescriptionModel({
+    required this.designation,
+    required this.userBranch,
+    required this.userName,
     required this.userId,
-    this.email,
-    this.role,
-    this.name,
+    required this.designationId,
+    required this.groupId,
+    required this.businessInfoReq,
+    required this.loadUtByProduct,
   });
 
-  factory UserDataModel.fromJson(Map<String, dynamic> json) {
-    return UserDataModel(
-      username: json['username'] ?? '',
-      userId: json['userId'] ?? json['id'] ?? '',
-      email: json['email'],
-      role: json['role'],
-      name: json['name'],
+  // Empty constructor for default values
+  factory UserDescriptionModel.empty() {
+    return const UserDescriptionModel(designation: '', userBranch: '', userName: '', userId: 0, designationId: 0, groupId: 0, businessInfoReq: 0, loadUtByProduct: 0);
+  }
+
+  factory UserDescriptionModel.fromJson(Map<String, dynamic> json) {
+    return UserDescriptionModel(
+      designation: json['Designation'] ?? '',
+      userBranch: json['UserBranch'] ?? '',
+      userName: json['UserName'] ?? '',
+      userId: json['UserId'] ?? 0,
+      designationId: json['DesignationId'] ?? 0,
+      groupId: json['Group_ID'] ?? 0,
+      businessInfoReq: json['BusinessInfoReq'] ?? 0,
+      loadUtByProduct: json['LoadUtByProduct'] ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'username': username,
-      'userId': userId,
-      'email': email,
-      'role': role,
-      'name': name,
+      'Designation': designation,
+      'UserBranch': userBranch,
+      'UserName': userName,
+      'UserId': userId,
+      'DesignationId': designationId,
+      'Group_ID': groupId,
+      'BusinessInfoReq': businessInfoReq,
+      'LoadUtByProduct': loadUtByProduct,
     };
   }
 
+  // Convert to JSON string for SharedPreferences storage
+  String toJsonString() {
+    return jsonEncode(toJson());
+  }
+
+  // Create from JSON string
+  factory UserDescriptionModel.fromJsonString(String jsonString) {
+    final json = jsonDecode(jsonString) as Map<String, dynamic>;
+    return UserDescriptionModel.fromJson(json);
+  }
+
   @override
-  List<Object?> get props => [username, userId, email, role, name];
+  List<Object?> get props => [designation, userBranch, userName, userId, designationId, groupId, businessInfoReq, loadUtByProduct];
 }
-
-
