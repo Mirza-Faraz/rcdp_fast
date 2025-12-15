@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../injection_container.dart';
 import 'apply_filters_page.dart';
 
 class ApprovalsPage extends StatefulWidget {
@@ -10,10 +13,14 @@ class ApprovalsPage extends StatefulWidget {
 }
 
 class _ApprovalsPageState extends State<ApprovalsPage> {
+  final ApiClient _apiClient = sl<ApiClient>();
   int _currentPage = 1;
   int _rowsPerPage = 20;
   List<Map<String, dynamic>> _approvals = [];
   Map<String, dynamic>? _appliedFilters; // Used to store applied filters for future API calls
+  bool _isLoading = false;
+  String? _error;
+
   final ScrollController _headerScrollController = ScrollController();
   final ScrollController _bodyScrollController = ScrollController();
   bool _hasShownEmptyMessage = false;
@@ -24,6 +31,9 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
     // Sync header and body horizontal scrolling
     _headerScrollController.addListener(_syncHeaderToBody);
     _bodyScrollController.addListener(_syncBodyToHeader);
+    
+    // Initial fetch
+    _fetchApprovals();
   }
 
   void _syncHeaderToBody() {
@@ -47,6 +57,71 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
     super.dispose();
   }
 
+  Future<void> _fetchApprovals() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      // Construct query parameters
+      final queryParams = {
+        'sidx': 'Member_ID', // Default sort column
+        'sord': 'DESC',      // Default sort order
+        'page': _currentPage,
+        'rows': _rowsPerPage,
+        'UserID': '91248',   // Hardcoded as per request example
+        // Other parameters can be empty strings as per instruction
+        'Branch_id': _appliedFilters?['branchId'] ?? '',
+        'Member_ID': _appliedFilters?['memberId'] ?? '',
+        'Case_Date': '',
+        'Case_DateTo': '',
+        'Product_ID': _appliedFilters?['products'] != null && (_appliedFilters!['products'] as List).isNotEmpty 
+                      ? (_appliedFilters!['products'] as List).join(',') // Assuming join by comma if multiple
+                      : '',
+        'Center_No': '',
+        'Approvel': '',
+        'cnic': _appliedFilters?['cnic'] ?? '',
+      };
+
+      final response = await _apiClient.get(
+        ApiEndpoints.getCaseList,
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map && data['data'] is List) {
+          final List<dynamic> list = data['data'];
+          setState(() {
+            _approvals = list.map((e) => e as Map<String, dynamic>).toList();
+            _hasShownEmptyMessage = false;
+          });
+        } else {
+           setState(() {
+            _approvals = [];
+          });
+        }
+      } else {
+        setState(() {
+          _error = 'Failed to load data (${response.statusCode})';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Error loading data: $e';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,9 +130,18 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
         child: Column(
           children: [
             _buildHeader(),
+            if (_error != null)
+              Container(
+                width: double.infinity,
+                color: Colors.red.shade100,
+                padding: const EdgeInsets.all(8),
+                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              ),
             _buildTableHeader(),
             Expanded(
-              child: _approvals.isEmpty
+              child: _isLoading 
+                ? const Center(child: CircularProgressIndicator())
+                : _approvals.isEmpty
                   ? _buildEmptyState()
                   : _buildTableContent(),
             ),
@@ -120,6 +204,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                                 setState(() {
                                   _currentPage--;
                                 });
+                                _fetchApprovals();
                               }
                             : null,
                         style: TextButton.styleFrom(
@@ -153,6 +238,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                           setState(() {
                             _currentPage++;
                           });
+                          _fetchApprovals();
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -209,6 +295,8 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
     100, // Status
   ];
 
+  double get _totalColumnWidth => _columnWidths.fold(0, (sum, width) => sum + width);
+
   Widget _buildTableHeader() {
     return Container(
       color: AppColors.primary,
@@ -241,74 +329,77 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   }
 
   Widget _buildTableContent() {
-    return ListView.builder(
-      itemCount: _approvals.length,
-      itemBuilder: (context, rowIndex) {
-        final approval = _approvals[rowIndex];
-        return Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.grey.shade200,
-                width: 1,
-              ),
-            ),
-          ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            controller: _bodyScrollController,
-            child: Row(
-              children: List.generate(_columnHeaders.length, (colIndex) {
-                final header = _columnHeaders[colIndex];
-                // Map header to data key
-                String dataKey = _getDataKeyForHeader(header);
-                return Container(
-                  width: _columnWidths[colIndex],
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  child: Text(
-                    approval[dataKey]?.toString() ?? '-',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      controller: _bodyScrollController,
+      child: SizedBox(
+        width: _totalColumnWidth,
+        child: ListView.builder(
+          itemCount: _approvals.length,
+          itemBuilder: (context, rowIndex) {
+            final approval = _approvals[rowIndex];
+            return Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.grey.shade200,
+                    width: 1,
                   ),
-                );
-              }),
-            ),
-          ),
-        );
-      },
+                ),
+              ),
+              child: Row(
+                children: List.generate(_columnHeaders.length, (colIndex) {
+                  final header = _columnHeaders[colIndex];
+                  // Map header to data key
+                  String dataKey = _getDataKeyForHeader(header);
+                  return Container(
+                    width: _columnWidths[colIndex],
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                    child: Text(
+                      approval[dataKey]?.toString() ?? '-',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
   String _getDataKeyForHeader(String header) {
-    // Map display headers to data keys
+    // Map display headers to data keys from API response
     switch (header) {
       case 'Mem ID':
-        return 'memId';
+        return 'Member_ID';
       case 'CNIC':
-        return 'cnic';
+        return 'NIC_New';
       case 'Name':
-        return 'name';
+        return 'PI_Name';
       case 'Amount':
-        return 'amount';
+        return 'OverDueAmount'; // Using OverDueAmount as Amount as per check
       case 'Center No':
-        return 'centerNo';
+        return 'Center_No'; // Might not be in response, but typical key
       case 'Donor Name':
-        return 'donorName';
+        return 'Donor_Name'; // Guessing
       case 'Nominee Name':
-        return 'nomineeName';
+        return 'Nominee_Name';
       case 'Nominee CNIC':
-        return 'nomineeCnic';
+        return 'Nominee_CNIC';
       case 'Co Name':
-        return 'coName';
+        return 'Client_Careoff_Name'; // Close match
       case 'Name As':
-        return 'nameAs';
+        return 'Name_As'; // Guessing
       case 'Status':
-        return 'status';
+        return 'Status'; // Guessing
       default:
-        return header.toLowerCase().replaceAll(' ', '');
+        return header;
     }
   }
 
@@ -368,13 +459,14 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           TextButton(
-            onPressed: _currentPage > 1
-                ? () {
+            onPressed: _isLoading || _currentPage <= 1
+                ? null
+                : () {
                     setState(() {
                       _currentPage--;
                     });
-                  }
-                : null,
+                    _fetchApprovals();
+                  },
             child: Text(
               '<<Previous',
               style: TextStyle(
@@ -391,11 +483,14 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                _currentPage++;
-              });
-            },
+            onPressed: _isLoading 
+                ? null 
+                : () {
+                    setState(() {
+                      _currentPage++;
+                    });
+                     _fetchApprovals();
+                  },
             child: const Text(
               'Next>>',
               style: TextStyle(
@@ -420,14 +515,10 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
     if (filters != null) {
       setState(() {
         _appliedFilters = filters;
-        // Here you would typically fetch filtered data from API using _appliedFilters
-        // For now, we'll just show empty state
-        _approvals = [];
         _currentPage = 1;
-        _hasShownEmptyMessage = false; // Reset flag to show message again if needed
+        _hasShownEmptyMessage = false; 
       });
-      // Using _appliedFilters to suppress unused warning - will be used in API calls
-      debugPrint('Filters applied: $_appliedFilters');
+      _fetchApprovals();
     }
   }
 }

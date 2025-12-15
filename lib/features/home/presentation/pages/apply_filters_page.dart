@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/error/exceptions.dart';
+import '../../../../injection_container.dart';
 
 class ApplyFiltersPage extends StatefulWidget {
   final Function(Map<String, dynamic>)? onFiltersApplied;
 
-  const ApplyFiltersPage({
-    super.key,
-    this.onFiltersApplied,
-  });
+  const ApplyFiltersPage({super.key, this.onFiltersApplied});
 
   @override
   State<ApplyFiltersPage> createState() => _ApplyFiltersPageState();
 }
 
 class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
+  final ApiClient _apiClient = sl<ApiClient>();
+
   String? _selectedBranchId;
   final TextEditingController _memberIdController = TextEditingController();
   final TextEditingController _cnicController = TextEditingController();
@@ -23,42 +26,106 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
   List<String> _selectedProducts = [];
   bool _isProductDropdownOpen = false;
 
-  // All available products
-  final List<String> _allProducts = [
-    'FFOSP RCDP',
-    'Gold-BPMM',
-    'PMYBL12',
-    'PMYBL24',
-    'PMYBL 36',
-    'ACAG',
-    'CED',
-    'EDF',
-    'LSF',
-    'BEL',
-    'PMIFL Monthly',
-    'PMIFL 6 Month',
-    'Pak Oman',
-    'IFL2 Monthly',
-    'IFL2 6 Monthly',
-    'PMIFL2 8 Monthly',
-    'Renewable energy',
-    'IFL Conv Monthly',
-    'IFL Conv 6Monthly',
-    'IFL2 Conv Monthly',
-    'IFL2 Conv 6Monthly',
-    'SME24',
-    'SHS (C1)',
-  ];
+  // Products and branches loaded from APIs
+  List<String> _allProducts = [];
+  List<String> _branches = ['SELECT BRANCH'];
 
-  // Sample branch options
-  final List<String> _branches = [
-    'SELECT BRANCH',
-    'Multan 1',
-    'Multan 2',
-    'Lahore 1',
-    'Karachi 1',
-    'Islamabad 1',
-  ];
+  bool _isBranchLoading = false;
+  String? _branchError;
+
+  bool _isProductLoading = false;
+  String? _productError;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBranches();
+    _fetchProducts();
+  }
+
+  Future<void> _fetchBranches() async {
+    setState(() {
+      _isBranchLoading = true;
+      _branchError = null;
+    });
+
+    try {
+      final response = await _apiClient.post(ApiEndpoints.getBranchDropDown);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        final List<dynamic> list = (data is Map && data['data'] is List) ? data['data'] as List : <dynamic>[];
+
+        final names = list.whereType<Map<String, dynamic>>().map((e) => e['BranchID_Name']?.toString() ?? '').where((name) => name.isNotEmpty).toList();
+
+        setState(() {
+          _branches = ['SELECT BRANCH', ...names];
+        });
+      } else {
+        setState(() {
+          _branchError = 'Failed to load branches (${response.statusCode}).';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        if (e is ServerException) {
+          _branchError = e.message;
+        } else if (e is NetworkException) {
+          _branchError = e.message;
+        } else {
+          _branchError = 'Failed to load branches. Please try again.';
+        }
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBranchLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchProducts() async {
+    setState(() {
+      _isProductLoading = true;
+      _productError = null;
+    });
+
+    try {
+      final response = await _apiClient.get(ApiEndpoints.getProductDropDown);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        final List<dynamic> list = (data is Map && data['data'] is List) ? data['data'] as List : <dynamic>[];
+
+        final names = list.whereType<Map<String, dynamic>>().map((e) => e['Product_Description']?.toString() ?? '').where((name) => name.isNotEmpty).toList();
+
+        setState(() {
+          _allProducts = names;
+        });
+      } else {
+        setState(() {
+          _productError = 'Failed to load products (${response.statusCode}).';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        if (e is ServerException) {
+          _productError = e.message;
+        } else if (e is NetworkException) {
+          _productError = e.message;
+        } else {
+          _productError = 'Failed to load products. Please try again.';
+        }
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProductLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -82,11 +149,7 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
         ),
         title: const Text(
           'Apply Filters',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -97,27 +160,11 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
             const Center(
               child: Text(
                 'Apply Filters',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  decoration: TextDecoration.underline,
-                ),
+                style: TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
               ),
             ),
             const SizedBox(height: 24),
-            _buildFilterField(
-              label: 'Branch ID',
-              child: _buildDropdown(
-                value: _selectedBranchId ?? 'SELECT BRANCH',
-                items: _branches,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedBranchId = value == 'SELECT BRANCH' ? null : value;
-                  });
-                },
-              ),
-            ),
+            _buildFilterField(label: 'Branch ID', child: _buildBranchDropdown()),
             const SizedBox(height: 16),
             _buildFilterField(
               label: 'Member ID',
@@ -126,17 +173,10 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
             const SizedBox(height: 16),
             _buildFilterField(
               label: 'Credit Officer',
-              child: _buildTextField(
-                controller: _creditOfficerController,
-                hintText: 'Select Credit Officer',
-                hasDropdownIcon: true,
-              ),
+              child: _buildTextField(controller: _creditOfficerController, hintText: 'Select Credit Officer', hasDropdownIcon: true),
             ),
             const SizedBox(height: 16),
-            _buildFilterField(
-              label: 'Product',
-              child: _buildProductDropdown(),
-            ),
+            _buildFilterField(label: 'Product', child: _buildProductDropdown()),
             const SizedBox(height: 16),
             _buildFilterField(
               label: 'Group Id',
@@ -156,10 +196,7 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
     );
   }
 
-  Widget _buildFilterField({
-    required String label,
-    required Widget child,
-  }) {
+  Widget _buildFilterField({required String label, required Widget child}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -169,11 +206,7 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
             padding: const EdgeInsets.only(top: 12.0),
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
             ),
           ),
         ),
@@ -182,11 +215,7 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
     );
   }
 
-  Widget _buildDropdown({
-    required String value,
-    required List<String> items,
-    required Function(String?) onChanged,
-  }) {
+  Widget _buildDropdown({required String value, required List<String> items, required Function(String?) onChanged}) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
@@ -200,13 +229,7 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
           items: items.map((item) {
             return DropdownMenuItem<String>(
               value: item,
-              child: Text(
-                item,
-                style: TextStyle(
-                  color: item == 'SELECT BRANCH' ? Colors.grey : Colors.black87,
-                  fontSize: 14,
-                ),
-              ),
+              child: Text(item, style: TextStyle(color: item == 'SELECT BRANCH' ? Colors.grey : Colors.black87, fontSize: 14)),
             );
           }).toList(),
           onChanged: onChanged,
@@ -215,12 +238,36 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    String? hintText,
-    bool hasDropdownIcon = false,
-    VoidCallback? onTap,
-  }) {
+  Widget _buildBranchDropdown() {
+    if (_isBranchLoading) {
+      return const Center(
+        child: Padding(padding: EdgeInsets.symmetric(vertical: 12.0), child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+
+    if (_branchError != null) {
+      return Row(
+        children: [
+          Expanded(
+            child: Text(_branchError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+          ),
+          TextButton(onPressed: _fetchBranches, child: const Text('Retry')),
+        ],
+      );
+    }
+
+    return _buildDropdown(
+      value: _selectedBranchId ?? 'SELECT BRANCH',
+      items: _branches,
+      onChanged: (value) {
+        setState(() {
+          _selectedBranchId = value == 'SELECT BRANCH' ? null : value;
+        });
+      },
+    );
+  }
+
+  Widget _buildTextField({required TextEditingController controller, String? hintText, bool hasDropdownIcon = false, VoidCallback? onTap}) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
@@ -233,9 +280,7 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
           hintStyle: TextStyle(color: Colors.grey.shade400),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          suffixIcon: hasDropdownIcon
-              ? const Icon(Icons.arrow_drop_down, color: Colors.grey)
-              : null,
+          suffixIcon: hasDropdownIcon ? const Icon(Icons.arrow_drop_down, color: Colors.grey) : null,
         ),
         readOnly: onTap != null,
         onTap: onTap,
@@ -244,14 +289,26 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
   }
 
   Widget _buildProductDropdown() {
+    if (_isProductLoading) {
+      return const Center(
+        child: Padding(padding: EdgeInsets.symmetric(vertical: 12.0), child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+
+    if (_productError != null) {
+      return Row(
+        children: [
+          Expanded(
+            child: Text(_productError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+          ),
+          TextButton(onPressed: _fetchProducts, child: const Text('Retry')),
+        ],
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(
-          color: _isProductDropdownOpen
-              ? AppColors.primary
-              : Colors.grey.shade300,
-          width: _isProductDropdownOpen ? 2 : 1,
-        ),
+        border: Border.all(color: _isProductDropdownOpen ? AppColors.primary : Colors.grey.shade300, width: _isProductDropdownOpen ? 2 : 1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -269,23 +326,11 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
                 children: [
                   Expanded(
                     child: Text(
-                      _selectedProducts.isEmpty
-                          ? 'SELECT PRODUCT'
-                          : '${_selectedProducts.length} Selected',
-                      style: TextStyle(
-                        color: _selectedProducts.isEmpty
-                            ? Colors.grey.shade400
-                            : Colors.black87,
-                        fontSize: 14,
-                      ),
+                      _selectedProducts.isEmpty ? 'SELECT PRODUCT' : '${_selectedProducts.length} Selected',
+                      style: TextStyle(color: _selectedProducts.isEmpty ? Colors.grey.shade400 : Colors.black87, fontSize: 14),
                     ),
                   ),
-                  Icon(
-                    _isProductDropdownOpen
-                        ? Icons.arrow_drop_up
-                        : Icons.arrow_drop_down,
-                    color: Colors.grey,
-                  ),
+                  Icon(_isProductDropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.grey),
                 ],
               ),
             ),
@@ -308,33 +353,17 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
                       });
                     },
                     child: Container(
-                      color: _selectedProducts.length == _allProducts.length
-                          ? AppColors.primary.withOpacity(0.1)
-                          : Colors.transparent,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
+                      color: _selectedProducts.length == _allProducts.length ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       child: Row(
                         children: [
                           Expanded(
                             child: Text(
-                              _selectedProducts.length == _allProducts.length
-                                  ? 'Deselect All'
-                                  : 'Select All',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              _selectedProducts.length == _allProducts.length ? 'Deselect All' : 'Select All',
+                              style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w600),
                             ),
                           ),
-                          if (_selectedProducts.length == _allProducts.length)
-                            const Icon(
-                              Icons.check,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
+                          if (_selectedProducts.length == _allProducts.length) const Icon(Icons.check, color: AppColors.primary, size: 20),
                         ],
                       ),
                     ),
@@ -359,30 +388,14 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
                             });
                           },
                           child: Container(
-                            color: isSelected
-                                ? AppColors.primary.withOpacity(0.1)
-                                : Colors.transparent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
-                            ),
+                            color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: Text(
-                                    product,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
+                                  child: Text(product, style: const TextStyle(fontSize: 14, color: Colors.black87)),
                                 ),
-                                if (isSelected)
-                                  const Icon(
-                                    Icons.check,
-                                    color: AppColors.primary,
-                                    size: 20,
-                                  ),
+                                if (isSelected) const Icon(Icons.check, color: AppColors.primary, size: 20),
                               ],
                             ),
                           ),
@@ -422,20 +435,10 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: const Text(
-          'Apply Filters',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        child: const Text('Apply Filters', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       ),
     );
   }
-
 }
-

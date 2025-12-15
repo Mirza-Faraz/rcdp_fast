@@ -11,19 +11,12 @@ class ApiClient {
         baseUrl: ApiEndpoints.baseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       ),
     );
 
     // Add interceptors for logging and error handling
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      error: true,
-    ));
+    _dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true, error: true));
 
     // Add auth interceptor (for adding token to requests)
     _dio.interceptors.add(_AuthInterceptor());
@@ -37,7 +30,15 @@ class ApiClient {
 
   // Set authorization token
   void setAuthToken(String token) {
-    _dio.options.headers['Authorization'] = 'Bearer $token';
+    final trimmed = token.trim();
+
+    // If backend already returns a full auth scheme (e.g. "Basic xxx" or "Bearer xxx"),
+    // use it as-is. Otherwise, default to Bearer.
+    if (trimmed.startsWith('Basic ') || trimmed.startsWith('Bearer ')) {
+      _dio.options.headers['Authorization'] = trimmed;
+    } else {
+      _dio.options.headers['Authorization'] = 'Bearer $trimmed';
+    }
   }
 
   // Clear authorization token
@@ -46,17 +47,9 @@ class ApiClient {
   }
 
   // Generic GET request
-  Future<Response> get(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters, Options? options}) async {
     try {
-      final response = await _dio.get(
-        path,
-        queryParameters: queryParameters,
-        options: options,
-      );
+      final response = await _dio.get(path, queryParameters: queryParameters, options: options);
       return response;
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -64,19 +57,9 @@ class ApiClient {
   }
 
   // Generic POST request
-  Future<Response> post(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options}) async {
     try {
-      final response = await _dio.post(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-      );
+      final response = await _dio.post(path, data: data, queryParameters: queryParameters, options: options);
       return response;
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -84,19 +67,9 @@ class ApiClient {
   }
 
   // Generic PUT request
-  Future<Response> put(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+  Future<Response> put(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options}) async {
     try {
-      final response = await _dio.put(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-      );
+      final response = await _dio.put(path, data: data, queryParameters: queryParameters, options: options);
       return response;
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -104,19 +77,9 @@ class ApiClient {
   }
 
   // Generic DELETE request
-  Future<Response> delete(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+  Future<Response> delete(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options}) async {
     try {
-      final response = await _dio.delete(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-      );
+      final response = await _dio.delete(path, data: data, queryParameters: queryParameters, options: options);
       return response;
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -130,26 +93,38 @@ class ApiClient {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         return NetworkException('Connection timeout. Please check your internet connection.');
-      
+
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
-        final message = error.response?.data['message'] ?? 'Server error occurred';
+        // Check for both 'message' and 'Message' (ASP.NET often uses Capitalized Message)
+        final data = error.response?.data;
+        String? serverMessage;
         
+        if (data is Map<String, dynamic>) {
+          serverMessage = data['message'] ?? data['Message'];
+        }
+        
+        final message = serverMessage ?? 'Server error occurred';
+
         if (statusCode == 401) {
           return ServerException('Unauthorized. Please login again.');
         } else if (statusCode == 403) {
           return ServerException('Forbidden. You don\'t have permission.');
         } else if (statusCode == 404) {
+          // If server provided a specific message, use it, otherwise use generic
+          if (serverMessage != null && serverMessage.isNotEmpty) {
+             return ServerException(serverMessage);
+          }
           return ServerException('Not found. Please check the URL.');
-        } else if (statusCode! >= 500) {
+        } else if (statusCode != null && statusCode >= 500) {
           return ServerException('Server error. Please try again later.');
         } else {
           return ServerException(message);
         }
-      
+
       case DioExceptionType.cancel:
         return NetworkException('Request cancelled.');
-      
+
       case DioExceptionType.unknown:
       default:
         if (error.message?.contains('SocketException') ?? false) {
@@ -188,5 +163,3 @@ class _ErrorInterceptor extends Interceptor {
     super.onError(err, handler);
   }
 }
-
-

@@ -11,6 +11,17 @@ class ApiEndpoints {
   static const String getUserProfile = '/UserDefinition/Profile';
   static const String updateProfile = '/user/profile';
 
+  // Product endpoints
+  static const String getProductDropDown = '/Product/GetProductDropDown';
+
+  // Branch endpoints
+  static const String getBranchDropDown = '/Branch/BranchDropSown';
+
+  // Case/Approvals endpoints
+  static const String getCaseList = '/SubmitCase/CaseList';
+  static const String getOverdueClients = '/SubmitCase/OverDueClients';
+  static const String getFollowUpClients = '/SubmitCase/OverDueClients'; // Reusing Overdue endpoint as per user request
+
   // Add more endpoints as needed
   // static const String getClients = '/clients';
   // static const String getDisbursements = '/disbursements';
