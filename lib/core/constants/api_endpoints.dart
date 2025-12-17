@@ -11,6 +11,10 @@ class ApiEndpoints {
   static const String getUserProfile = '/UserDefinition/Profile';
   static const String updateProfile = '/user/profile';
 
+  // Dashboard endpoints
+  static const String dashboard = '/Dashboard/DashBoard';
+  static const String dashboardAmount = '/Dashboard/DashBoardAmount';
+
   // Product endpoints
   static const String getProductDropDown = '/Product/GetProductDropDown';
 

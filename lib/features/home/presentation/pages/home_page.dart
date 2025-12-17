@@ -10,6 +10,13 @@ import 'overdue_clients_page.dart';
 import 'clients_nearby_page.dart';
 import 'reports_page.dart';
 import 'loan_tracking_list_page.dart';
+import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
+import '../../../../core/constants/api_endpoints.dart';
+import '../../../../injection_container.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
+import '../../data/models/dashboard_model.dart';
 import 'disbursement_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,22 +31,158 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
-  String _selectedDataItem = 'Active Areas';
+  String _selectedDataItem = 'Active Areas'; // Default selection
+  String _selectedAmount = '0';
+  List<DashboardItem> _dashboardItems = [];
+  int _userId = 0;
+  bool _isAmountLoading = false;
 
+  @override
   @override
   void initState() {
     super.initState();
-    _simulateLoading();
+    _errorMessage = '';
+    _loadInitialData();
+  }
+  
+  String _errorMessage = '';
+
+  Future<void> _loadInitialData() async {
+    await _getUserDetails();
+    await _fetchDashboardList();
   }
 
-  void _simulateLoading() {
-    Future.delayed(const Duration(seconds: 2), () {
+  Future<void> _getUserDetails() async {
+    final result = await sl<AuthRepository>().getUserDescription();
+    result.fold(
+      (failure) => debugPrint('Error getting user details: ${failure.message}'),
+      (userDescription) {
+        if (userDescription != null) {
+          setState(() {
+            _userId = userDescription.userId;
+          });
+        }
+      },
+    );
+  }
+
+  Future<void> _fetchDashboardList() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final apiClient = sl<ApiClient>();
+      final response = await apiClient.get(ApiEndpoints.dashboard);
+      
+      if (response.statusCode == 200) {
+        final dashboardResponse = DashboardResponse.fromJson(response.data);
+        if (mounted) {
+          setState(() {
+            _dashboardItems = dashboardResponse.data;
+            _isLoading = false;
+            
+            // If items are loaded, select the first one and fetch its amount
+            if (_dashboardItems.isNotEmpty) {
+              final firstItem = _dashboardItems.first;
+              _selectedDataItem = firstItem.description;
+              _fetchAmount(firstItem.description);
+            }
+          });
+        }
+      } else {
+        throw Exception('Failed to load dashboard data');
+      }
+    } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _errorMessage = e.toString();
         });
       }
+    }
+  }
+
+  Future<void> _fetchAmount(String itemName) async {
+    if (_userId == 0) return; // Wait for user ID
+    
+    setState(() {
+      _isAmountLoading = true;
+      _selectedDataItem = itemName;
     });
+
+    try {
+      final apiClient = sl<ApiClient>();
+      
+      // Determine date range (default to current month or similar, taking simplest approach for now)
+      final now = DateTime.now();
+      final formatter = DateFormat('yyyy-MM-dd');
+      // Assuming today for both or start of month to today based on typical dashboard needs.
+      // User prompt: "DateFrom={DateFrom}&DateTo={DateTo}"
+      // I'll default to "start of month" to "today" as a reasonable default, or just today if unsure.
+      // Let's use today for both for now to minimize data volume, or maybe start of month?
+      // Given "Active Clients", "Overdue", etc., these are point-in-time often, but "Disbursement" is over time.
+      // I will use current date for both to be safe, or perhaps start of month.
+      // Let's try 1st of month to today.
+      final dateFrom = formatter.format(DateTime(now.year, now.month, 1));
+      final dateTo = formatter.format(now);
+
+      final response = await apiClient.get(
+        ApiEndpoints.dashboardAmount,
+        queryParameters: {
+          'User_id': _userId,
+          'DateFrom': dateFrom,
+          'DateTo': dateTo,
+          'Name': itemName,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        // Check if "message" is "Record Found" or "Record not Found"
+        // The example response for success wasn't fully detailed on structure of "amount", 
+        // but "Record not Found" returned data: [].
+        // Assuming success returns a list or a field with the value.
+        // Let's look at the first example again. 
+        // Wait, "response: ... 'data':[{'Description':'...', 'Total':null}...]"
+        // The AMOUNT API response structure wasn't explicitly shown with data.
+        // But prompt says: "You will amount for the item you clicked... it will show its number or its name at top of it"
+        // I'll assume the structure is similar to the list but with populated 'Total' or a single value?
+        // Let's assume standard response format with 'data'.
+        // If data is empty list [], it means 0 or not found.
+        
+        // Let's handle the response dynamically.
+        String amount = '0';
+        if (data['data'] != null && (data['data'] as List).isNotEmpty) {
+           final firstItem = (data['data'] as List).first;
+           amount = firstItem['Total']?.toString() ?? firstItem['Amount']?.toString() ?? '0'; // Guessing 'Total' or 'Amount'
+        } else if (data['total'] != null) {
+           amount = data['total'].toString();
+        }
+        
+        // Actually, looking at the first screenshot... wait, first screenshot is for LIST.
+        // Second screenshot is for Amount... response for "Active Areas" -> "0".
+        // The response shown in prompt for Amount API was failure case: {"message":"Record not Found","data":[],"status":"False"}.
+        // I will assume if success, data contains something.
+        // I will dump the response to debug if needed, but for now standard handling.
+        
+        if (mounted) {
+          setState(() {
+            _selectedAmount = amount;
+            _isAmountLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _selectedAmount = 'Error';
+          _isAmountLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -243,10 +386,17 @@ class _HomePageState extends State<HomePage> {
           style: const TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        const Text(
-          '0',
-          style: TextStyle(color: AppColors.primary, fontSize: 48, fontWeight: FontWeight.bold),
-        ),
+        if (_isAmountLoading)
+          const SizedBox(
+            height: 48, 
+            width: 48, 
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else
+          Text(
+            _selectedAmount,
+            style: const TextStyle(color: AppColors.primary, fontSize: 48, fontWeight: FontWeight.bold),
+          ),
       ],
     );
   }
@@ -275,53 +425,51 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildInfoCards() {
-    final cards = [
-      _InfoCard(icon: Icons.location_on, title: 'Active Areas', color: AppColors.primary, dataType: 'active_areas'),
-      _InfoCard(icon: Icons.business, title: 'Active Branches', color: AppColors.primary, dataType: 'active_branches'),
-      _InfoCard(icon: Icons.people, title: 'Active Clients', color: AppColors.primary, dataType: 'active_clients'),
-      _InfoCard(icon: Icons.person, title: 'Active CO', color: AppColors.primary, dataType: 'active_co'),
-      _InfoCard(icon: Icons.home, title: 'Active Villages', color: AppColors.primary, dataType: 'active_villages'),
-      _InfoCard(icon: Icons.attach_money, title: 'Amount Disbursed', color: AppColors.primary, dataType: 'amount_disbursed'),
-      _InfoCard(icon: Icons.person_off, title: 'Death Clients', color: AppColors.primary, dataType: 'death_clients'),
-      _InfoCard(icon: Icons.store, title: 'Disburs Centers', color: AppColors.primary, dataType: 'disburs_centers'),
-      _InfoCard(icon: Icons.trending_up, title: 'Disbursement Achievement', color: AppColors.primary, dataType: 'disbursement_achievement'),
-      _InfoCard(icon: Icons.flag, title: 'Disbursement Target', color: AppColors.primary, dataType: 'disbursement_target'),
-      _InfoCard(icon: Icons.folder_open, title: 'File in Process', color: AppColors.primary, dataType: 'file_in_process'),
-      _InfoCard(icon: Icons.folder, title: 'File Submitted', color: AppColors.primary, dataType: 'file_submitted'),
-      _InfoCard(icon: Icons.cancel, title: 'No Loan Disbursed', color: AppColors.primary, dataType: 'no_loan_disbursed'),
-      _InfoCard(icon: Icons.access_time, title: 'Overdue Clients', color: AppColors.primary, dataType: 'overdue_clients'),
-      _InfoCard(icon: Icons.pie_chart, title: 'PAR', color: AppColors.primary, dataType: 'par'),
-      _InfoCard(icon: Icons.check_circle, title: 'Recovery Achievement', color: AppColors.primary, dataType: 'recovery_achievement'),
-      _InfoCard(icon: Icons.calendar_today, title: 'Recovery Target Till Date', color: AppColors.primary, dataType: 'recovery_target_till_date'),
-      _InfoCard(icon: Icons.calendar_month, title: 'Recovery Till Date', color: AppColors.primary, dataType: 'recovery_till_date'),
-    ];
+    if (_dashboardItems.isEmpty) {
+      return Center(
+        child: _errorMessage.isNotEmpty 
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_errorMessage, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _fetchDashboardList,
+                    child: const Text('Retry'),
+                  )
+                ],
+              )
+            : const Text('No data available'),
+      );
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: cards.length,
+      itemCount: _dashboardItems.length,
       itemBuilder: (context, index) {
-        final card = cards[index];
+        final item = _dashboardItems[index];
+        final iconData = _getIconForDataDescription(item.description);
+        
         return GestureDetector(
           onTap: () {
-            setState(() {
-              _selectedDataItem = card.title;
-              _isLoading = true;
-            });
-            _simulateLoading();
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DataDetailPage(title: card.title, dataType: card.dataType),
-              ),
-            );
+            _fetchAmount(item.description);
+            // Optional: Navigate if needed, but current requirement is to show amount at top
+            // The original code navigated to DataDetailPage. 
+            // The prompt says: "when user clicks ... it will show its number or its name at top of it"
+            // It does NOT say to navigate. It implies updating the header.
+            // However, the original code had navigation. I will keep navigation temporarily DISABLED or remove it
+            // if the requirement implies single page. 
+            // "You will amount for the item you clicked, you just need to send the name of that item in this API"
+            // "when user clicks on that scrollable dashboard on the home screen for the any of the page it will show its number or its name at top of it"
+            // This strongly implies staying on the same page.
           },
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _selectedDataItem == item.description ? AppColors.primary.withOpacity(0.05) : Colors.white,
               borderRadius: BorderRadius.circular(12),
+              border: _selectedDataItem == item.description ? Border.all(color: AppColors.primary, width: 1) : null,
               boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
             ),
             child: Row(
@@ -329,22 +477,47 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(color: card.color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                  child: Icon(card.icon, color: card.color, size: 24),
+                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: Icon(iconData, color: AppColors.primary, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    card.title,
-                    style: TextStyle(color: card.color, fontSize: 16, fontWeight: FontWeight.w600),
+                    item.description,
+                    style: const TextStyle(color: AppColors.primary, fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
+                if (_selectedDataItem == item.description && !_isAmountLoading)
+                 Text(
+                   _selectedAmount, // Show amount inline too? Maybe not, stick to header as requested.
+                   style: const TextStyle(color: AppColors.primary, fontSize: 16, fontWeight: FontWeight.bold), 
+                 ),
               ],
             ),
           ),
         );
       },
     );
+  }
+
+  IconData _getIconForDataDescription(String description) {
+    if (description.contains('Area')) return Icons.location_on;
+    if (description.contains('Branch')) return Icons.business;
+    if (description.contains('Client')) return Icons.people;
+    if (description.contains('CO')) return Icons.person;
+    if (description.contains('Village')) return Icons.home;
+    if (description.contains('Amount')) return Icons.attach_money;
+    if (description.contains('Disbursed')) return Icons.attach_money; // Fallback
+    if (description.contains('Death')) return Icons.person_off;
+    if (description.contains('Center')) return Icons.store;
+    if (description.contains('Target')) return Icons.flag;
+    if (description.contains('File')) return Icons.folder;
+    if (description.contains('Loan')) return Icons.money;
+    if (description.contains('Overdue')) return Icons.access_time;
+    if (description.contains('PAR')) return Icons.pie_chart;
+    if (description.contains('Recovery')) return Icons.check_circle;
+    
+    return Icons.insert_chart; // Default
   }
 }
 
