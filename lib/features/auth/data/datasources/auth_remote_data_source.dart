@@ -5,12 +5,20 @@ import '../../../../core/network/api_client.dart';
 import '../models/login_request_model.dart';
 import '../models/login_response_model.dart';
 import '../models/profile_response_model.dart';
+import '../models/profile_response_model.dart';
+import '../models/user_rights_model.dart';
+import '../models/branch_model.dart';
+import '../models/product_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponseModel> login(LoginRequestModel request);
   Future<void> logout();
   Future<void> changePassword(String username, String oldPassword, String newPassword);
   Future<ProfileResponseModel> getProfile(int userId, {required String token});
+  Future<UserRightsResponseModel> getUserRights(int groupId);
+  Future<BranchResponseModel> getBranches(int userId);
+  Future<String> getCenterNumber(int branchId);
+  Future<ProductResponseModel> getProducts(int branchId);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -104,6 +112,94 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         rethrow;
       }
       throw ServerException('An error occurred while getting profile: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<UserRightsResponseModel> getUserRights(int groupId) async {
+    try {
+      final response = await apiClient.get(
+        ApiEndpoints.getUserRights,
+        queryParameters: {'group': groupId},
+      );
+
+      if (response.statusCode == 200) {
+        return UserRightsResponseModel.fromJson(response.data);
+      } else {
+        throw ServerException('Failed to fetch user rights');
+      }
+    } catch (e) {
+      if (e is ServerException || e is NetworkException) {
+        rethrow;
+      }
+      throw ServerException('An error occurred while fetching user rights: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<BranchResponseModel> getBranches(int userId) async {
+    try {
+      final response = await apiClient.get(
+        ApiEndpoints.getBranchesByUserId,
+        queryParameters: {'UserId': userId},
+      );
+
+      if (response.statusCode == 200) {
+        return BranchResponseModel.fromJson(response.data);
+      } else {
+        throw ServerException('Failed to fetch branches');
+      }
+    } catch (e) {
+      if (e is ServerException || e is NetworkException) {
+        rethrow;
+      }
+      throw ServerException('An error occurred while fetching branches: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<String> getCenterNumber(int branchId) async {
+    try {
+      final response = await apiClient.get(
+        ApiEndpoints.getCenterNumber,
+        queryParameters: {'BranchId': branchId},
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map<String, dynamic> && data['status'] == 'True') {
+          return data['data']?.toString() ?? '';
+        }
+        throw ServerException('Failed to fetch center number: Invalid response format');
+      } else {
+        throw ServerException('Failed to fetch center number');
+      }
+    } catch (e) {
+      if (e is ServerException || e is NetworkException) {
+        rethrow;
+      }
+      throw ServerException('An error occurred while fetching center number: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<ProductResponseModel> getProducts(int branchId) async {
+    try {
+      final response = await apiClient.get(
+        ApiEndpoints.getProductByBranch,
+        queryParameters: {'BranchID': branchId},
+      );
+
+      if (response.statusCode == 200) {
+        return ProductResponseModel.fromJson(response.data);
+      } else {
+        throw ServerException('Failed to fetch products');
+      }
+    } catch (e) {
+      if (e is ServerException || e is NetworkException) {
+        rethrow;
+      }
+      throw ServerException('An error occurred while fetching products: ${e.toString()}');
     }
   }
 }

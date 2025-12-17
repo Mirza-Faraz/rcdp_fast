@@ -37,7 +37,76 @@ class AuthRepositoryImpl implements AuthRepository {
           await localDataSource.saveUserDescription(response.userDescription);
 
           // Save complete login response for easy retrieval
+          // Save complete login response for easy retrieval
           await localDataSource.saveLoginResponse(response);
+
+          // Fetch and save User Rights
+          try {
+            // Get group ID from user description (assuming mapping is correct)
+            // UserDescriptionModel has 'groupId'.
+            final groupId = response.userDescription.groupId;
+            if (groupId != 0) {
+              final userRightsResponse = await remoteDataSource.getUserRights(groupId);
+              if (userRightsResponse.status == 'True' && userRightsResponse.data != null) {
+                await localDataSource.saveUserRights(userRightsResponse.data!);
+              }
+            }
+          } catch (e) {
+            // Log error but don't fail login?
+            // User asked to handle exceptions. 
+            // If rights fetch fails, we proceed but maybe log it.
+            // For now, I'll catch and ignore/print, as failing login might be too harsh 
+            // if the main login succeeded. But if rights are critical, maybe we should warn.
+            // Given the requirement "make sure that it will work properly", 
+            // I'll proceed with login even if rights fail, but rights will be null.
+            print('Failed to fetch user rights: $e');
+          }
+
+          // Fetch and save Branch Info
+          try {
+            // Get User ID from user description
+            final userId = response.userDescription.userId;
+            if (userId != 0) {
+              final branchResponse = await remoteDataSource.getBranches(userId);
+              if (branchResponse.status == 'True') {
+                await localDataSource.saveBranches(branchResponse.data);
+
+                  if (branchResponse.data.isNotEmpty) {
+                    try {
+                      // Using the first branch ID as per requirement "branch = 43" 
+                      // assuming simple single-branch active context or first availability
+                      final branchId = branchResponse.data.first.branchId;
+                      if (branchId != 0) {
+                        // Fetch Center Number
+                        try {
+                          final centerNumber = await remoteDataSource.getCenterNumber(branchId);
+                          if (centerNumber.isNotEmpty) {
+                            await localDataSource.saveCenterNumber(centerNumber);
+                          }
+                        } catch (e) {
+                          print('Failed to fetch center number: $e');
+                        }
+
+                        // Fetch Products
+                        try {
+                          final productResponse = await remoteDataSource.getProducts(branchId);
+                          if (productResponse.status == 'True') {
+                            await localDataSource.saveProducts(productResponse.data);
+                          }
+                        } catch (e) {
+                          print('Failed to fetch products: $e');
+                        }
+                      }
+                    } catch (e) {
+                      print('Failed to process branch dependent data: $e');
+                    }
+                  }
+              }
+            }
+          } catch (e) {
+            // Log error but don't fail login
+            print('Failed to fetch branch info: $e');
+          }
 
           return const Right(true);
         } else if (response.success && (!hasToken || !hasUserId)) {

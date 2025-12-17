@@ -3,6 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/login_response_model.dart';
 import '../models/profile_response_model.dart';
+import '../models/user_rights_model.dart';
+import '../models/branch_model.dart';
+import '../models/product_model.dart';
 
 abstract class AuthLocalDataSource {
   Future<bool> saveUsername(String username);
@@ -22,6 +25,22 @@ abstract class AuthLocalDataSource {
   // Profile data methods
   Future<bool> saveProfile(ProfileDataModel profile);
   Future<ProfileDataModel?> getProfile();
+
+  // User Rights
+  Future<bool> saveUserRights(UserRightsModel userRights);
+  Future<UserRightsModel?> getUserRights();
+
+  // Branch Info
+  Future<bool> saveBranches(List<BranchModel> branches);
+  Future<List<BranchModel>?> getBranches();
+
+  // Center Number
+  Future<bool> saveCenterNumber(String centerNumber);
+  Future<String?> getCenterNumber();
+
+  // Product List
+  Future<bool> saveProducts(List<ProductModel> products);
+  Future<List<ProductModel>?> getProducts();
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
@@ -32,6 +51,10 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   static const String userDescriptionKey = 'USER_DESCRIPTION';
   static const String loginResponseKey = 'LOGIN_RESPONSE';
   static const String profileKey = 'USER_PROFILE';
+  static const String userRightsKey = 'USER_RIGHTS';
+  static const String branchesKey = 'BRANCH_INFO';
+  static const String centerNumberKey = 'CENTER_NUMBER';
+  static const String productsKey = 'PRODUCT_LIST';
 
   AuthLocalDataSourceImpl({required this.sharedPreferences});
 
@@ -167,8 +190,103 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       await sharedPreferences.remove(userDescriptionKey);
       await sharedPreferences.remove(loginResponseKey);
       await sharedPreferences.remove(profileKey);
+      await sharedPreferences.remove(userRightsKey);
+      await sharedPreferences.remove(branchesKey);
+      await sharedPreferences.remove(centerNumberKey);
+      await sharedPreferences.remove(productsKey);
     } catch (e) {
       throw CacheException('Failed to clear auth data');
+    }
+  }
+
+  @override
+  Future<bool> saveUserRights(UserRightsModel userRights) async {
+    try {
+      final jsonString = jsonEncode(userRights.toJson());
+      return await sharedPreferences.setString(userRightsKey, jsonString);
+    } catch (e) {
+      throw CacheException('Failed to save user rights');
+    }
+  }
+
+  @override
+  Future<UserRightsModel?> getUserRights() async {
+    try {
+      final jsonString = sharedPreferences.getString(userRightsKey);
+      if (jsonString != null && jsonString.isNotEmpty) {
+        return UserRightsModel.fromJsonString(jsonString);
+      }
+      return null;
+    } catch (e) {
+      throw CacheException('Failed to get user rights');
+    }
+  }
+
+  @override
+  Future<bool> saveBranches(List<BranchModel> branches) async {
+    try {
+      final jsonList = branches.map((b) => b.toJson()).toList();
+      final jsonString = jsonEncode(jsonList);
+      return await sharedPreferences.setString(branchesKey, jsonString);
+    } catch (e) {
+      throw CacheException('Failed to save branches');
+    }
+  }
+
+  @override
+  Future<List<BranchModel>?> getBranches() async {
+    try {
+      final jsonString = sharedPreferences.getString(branchesKey);
+      if (jsonString != null && jsonString.isNotEmpty) {
+        final List<dynamic> jsonList = jsonDecode(jsonString);
+        return jsonList.map((j) => BranchModel.fromJson(j)).toList();
+      }
+      return null;
+    } catch (e) {
+      throw CacheException('Failed to get branches');
+    }
+  }
+
+  @override
+  Future<bool> saveCenterNumber(String centerNumber) async {
+    try {
+      return await sharedPreferences.setString(centerNumberKey, centerNumber);
+    } catch (e) {
+      throw CacheException('Failed to save center number');
+    }
+  }
+
+  @override
+  Future<String?> getCenterNumber() async {
+    try {
+      return sharedPreferences.getString(centerNumberKey);
+    } catch (e) {
+      throw CacheException('Failed to get center number');
+    }
+  }
+
+  @override
+  Future<bool> saveProducts(List<ProductModel> products) async {
+    try {
+      final jsonList = products.map((p) => p.toJson()).toList();
+      final jsonString = jsonEncode(jsonList);
+      return await sharedPreferences.setString(productsKey, jsonString);
+    } catch (e) {
+      throw CacheException('Failed to save products');
+    }
+  }
+
+  @override
+  Future<List<ProductModel>?> getProducts() async {
+    try {
+      final jsonString = sharedPreferences.getString(productsKey);
+      if (jsonString != null && jsonString.isNotEmpty) {
+        final List<dynamic> jsonList = jsonDecode(jsonString);
+        return jsonList.map((j) => ProductModel.fromJson(j)).toList();
+      }
+      return null;
+    } catch (e) {
+      throw CacheException('Failed to get products');
     }
   }
 }

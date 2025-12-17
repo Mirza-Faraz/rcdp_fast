@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../injection_container.dart' as di;
+import '../../../auth/data/datasources/auth_local_data_source.dart';
+import '../../domain/repositories/client_repository.dart';
 import 'client_detail_page.dart';
 import 'already_saved_clients_page.dart';
 
@@ -330,7 +333,7 @@ class _DisbursementPageState extends State<DisbursementPage> {
     );
   }
 
-  void _handleOpen() {
+  Future<void> _handleOpen() async {
     if (_searchController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -341,46 +344,131 @@ class _DisbursementPageState extends State<DisbursementPage> {
       return;
     }
 
-    // Simulate client search
-    // In real app, this would be an API call
     final searchValue = _searchController.text.trim();
     
-    // Check if client exists (mock logic - for demo, some CNICs exist)
-    final clientExists = _checkClientExists(searchValue);
-    
-    if (clientExists) {
-      // Navigate to client detail page
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ClientDetailPage(
-            cnic: _searchByCNIC ? searchValue : null,
-            memberId: _searchByCNIC ? null : searchValue,
-            clientName: 'Test', // This would come from API
-          ),
-        ),
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // Get Branch ID
+      final authLocalDataSource = di.sl<AuthLocalDataSource>();
+      final branches = await authLocalDataSource.getBranches();
+      
+      if (branches == null || branches.isEmpty) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No branch information found. Please relogin.')),
+        );
+        return;
+      }
+
+      final branchId = branches.first.branchId;
+
+      // Call API
+      final clientRepository = di.sl<ClientRepository>();
+      // Determine what to pass. The API takes CNIC. If Member ID is selected, 
+      // the requirement says "ClientSearch?CNIC={CNIC}&BranchId={BranchId}".
+      // It implies searching by CNIC. 
+      // If the user selects "Member ID", we might need a different endpoint OR 
+      // the same endpoint handles both? 
+      // The user request says: "ClientSearch?CNIC={CNIC}&BranchId={BranchId}".
+      // And the UI has a switcher. 
+      // If I look at the mock logic previously: `_searchByCNIC ? searchValue : null`.
+      // I'll assume for now I pass searchValue as CNIC if _searchByCNIC is true.
+      // If NOT _searchByCNIC, I might need to clarify or just try passing it as CNIC 
+      // (some APIs are smart) or maybe I can't search by MemberID with this specific API.
+      // However, the JSON Response has "Member_ID".
+      // I will implement for CNIC as explicitly requested. 
+      // If Member ID search is needed via same endpoint, I might need to adjust or ask.
+      // For now, I will use the searchValue as 'CNIC' parameter regardless, 
+      // or maybe valid CNIC format check is needed.
+      
+      // But wait, the previous code had logic for Member ID.
+      // Let's assume for this task "Search Client in Client disbursement" with the specific URI provided,
+      // it applies to the CNIC search mode.
+      
+      final result = await clientRepository.searchClient(searchValue, branchId);
+      
+      Navigator.pop(context); // Close loading
+
+      result.fold(
+        (failure) {
+          // Failure (Network or Server)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(failure.message)),
+          );
+        },
+        (response) {
+          // Success (Response received)
+          if (response.status == 'False') {
+             // Check for specific blacklist message or general error in message
+             if (response.message.toLowerCase().contains('black list')) {
+                _showBlackListDialog(response.message);
+             } else {
+                setState(() {
+                  _clientNotFound = true;
+                  _showNameField = true;
+                  if (_searchByCNIC) {
+                    _foundCnic = searchValue;
+                    _foundMemberId = null;
+                  } else {
+                    _foundMemberId = searchValue;
+                    _foundCnic = null;
+                  }
+                });
+             }
+          } else {
+            // Client Found
+            // Navigate to detail
+             if (response.data.isNotEmpty) {
+               final client = response.data.first;
+               Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ClientDetailPage(
+                    cnic: client.nicNew,
+                    memberId: client.memberId,
+                    clientName: client.piName,
+                    // Pass other details if needed, Model has many fields
+                  ),
+                ),
+              );
+             } else {
+               // Status true but no data?
+               ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Client not found.')),
+               );
+             }
+          }
+        },
       );
-    } else {
-      setState(() {
-        _clientNotFound = true;
-        _showNameField = true;
-        if (_searchByCNIC) {
-          _foundCnic = searchValue;
-          _foundMemberId = null;
-        } else {
-          _foundMemberId = searchValue;
-          _foundCnic = null;
-        }
-      });
+
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
-  bool _checkClientExists(String value) {
-    // Mock: Check if client exists
-    // For demo purposes, return true for certain values to show existing client flow
-    // In real app, this would be an API call
-    final existingClients = ['35202-4175458-5', '9042000003'];
-    return existingClients.contains(value);
+  void _showBlackListDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Warning'),
+        content: Text(message, style: const TextStyle(color: Colors.red)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildBottomNavigation() {

@@ -15,6 +15,15 @@ class ApiEndpoints {
   static const String dashboard = '/Dashboard/DashBoard';
   static const String dashboardAmount = '/Dashboard/DashBoardAmount';
 
+  // User Rights
+  static const String getUserRights = '/UserRights/GetUserRights';
+
+  // Branch Info
+  static const String getBranchesByUserId = '/ClientInfo/GetBranchesByUserId';
+  static const String getCenterNumber = '/SubmitCase/GetCenterNumber';
+  static const String getProductByBranch = '/SubmitCase/GetProductByBranch';
+  static const String clientSearch = '/ClientInfo/ClientSearch';
+
   // Product endpoints
   static const String getProductDropDown = '/Product/GetProductDropDown';
 
