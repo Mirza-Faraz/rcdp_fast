@@ -16,6 +16,7 @@ import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/domain/usecases/save_username_usecase.dart';
 import 'features/auth/domain/usecases/get_profile_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/home/presentation/manager/nearby_clients_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -23,6 +24,7 @@ Future<void> init() async {
   //! Features - Auth
   // Bloc
   sl.registerFactory(() => AuthBloc(loginUseCase: sl(), saveUsernameUseCase: sl(), getSavedUsernameUseCase: sl()));
+  sl.registerFactory(() => NearbyClientsCubit(clientRepository: sl()));
 
   // Use cases
   sl.registerLazySingleton(() => LoginUseCase(sl()));
