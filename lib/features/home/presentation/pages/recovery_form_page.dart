@@ -4,6 +4,8 @@ import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../injection_container.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
+import '../../../auth/data/models/product_model.dart';
 
 class RecoveryFormPage extends StatefulWidget {
   const RecoveryFormPage({super.key});
@@ -32,46 +34,55 @@ class _RecoveryFormPageState extends State<RecoveryFormPage> {
   @override
   void initState() {
     super.initState();
-    _fetchProducts();
+    _loadInitialData();
   }
 
-  Future<void> _fetchProducts() async {
+  Future<void> _loadInitialData() async {
+    final authRepo = sl<AuthRepository>();
+    final branchesResult = await authRepo.getSavedBranches();
+    
+    branchesResult.fold(
+      (failure) => _fetchProducts(0), // Fallback or handle error
+      (branches) {
+        if (branches != null && branches.isNotEmpty) {
+          _fetchProducts(branches.first.branchId);
+        } else {
+          _fetchProducts(0);
+        }
+      },
+    );
+  }
+
+  Future<void> _fetchProducts(int branchId) async {
     setState(() {
       _isLoadingProducts = true;
       _productError = null;
     });
 
     try {
-      final response = await _apiClient.get(ApiEndpoints.getProductDropDown);
+      final authRepo = sl<AuthRepository>();
+      final result = await authRepo.getProducts(branchId);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data;
-        final List<dynamic> list = (data is Map && data['data'] is List) ? data['data'] as List : <dynamic>[];
-
-        final products = list.whereType<Map<String, dynamic>>().map(_ProductItem.fromJson).toList();
-
-        if (mounted) {
-          setState(() {
-            _products = products;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            _productError = 'Failed to load products (${response.statusCode}).';
-          });
-        }
-      }
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              _productError = failure.message;
+            });
+          }
+        },
+        (products) {
+          if (mounted) {
+            setState(() {
+              _products = products.map((p) => _ProductItem(id: p.productId, description: p.productDescription)).toList();
+            });
+          }
+        },
+      );
     } catch (e) {
       if (mounted) {
         setState(() {
-          if (e is ServerException) {
-            _productError = e.message;
-          } else if (e is NetworkException) {
-            _productError = e.message;
-          } else {
-            _productError = 'Failed to load products. Please try again.';
-          }
+          _productError = 'Failed to load products. Please try again.';
         });
       }
     } finally {
@@ -225,7 +236,7 @@ class _RecoveryFormPageState extends State<RecoveryFormPage> {
                 Expanded(
                   child: Text(_productError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
                 ),
-                TextButton(onPressed: _fetchProducts, child: const Text('Retry')),
+                TextButton(onPressed: _loadInitialData, child: const Text('Retry')),
               ],
             ),
           )

@@ -352,7 +352,23 @@ class _ClientsNearbyViewState extends State<_ClientsNearbyView> {
     );
   }
 
-  void _openFilters() {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const ApplyFiltersPage()));
+  void _openFilters() async {
+    final filters = await Navigator.push<Map<String, dynamic>>(
+      context, 
+      MaterialPageRoute(builder: (_) => const ApplyFiltersPage())
+    );
+    
+    if (filters != null && mounted) {
+      final cubit = context.read<NearbyClientsCubit>();
+      cubit.fetchNearbyClients(
+        userId: _userId,
+        branchId: int.tryParse(filters['branchId']?.toString() ?? '') ?? _branchId,
+        memberId: filters['memberId'],
+        cnic: filters['cnic'],
+        productId: (filters['products'] as List?)?.join(','),
+        centerNo: filters['groupId'], // Assuming Group ID maps to center number as per UI context or similar
+        isRefresh: true,
+      );
+    }
   }
 }

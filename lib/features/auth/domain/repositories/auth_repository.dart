@@ -2,6 +2,8 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../data/models/login_response_model.dart';
 import '../../data/models/profile_response_model.dart';
+import '../../data/models/branch_model.dart';
+import '../../data/models/product_model.dart';
 
 abstract class AuthRepository {
   Future<Either<Failure, bool>> login(String username, String password);
@@ -18,4 +20,6 @@ abstract class AuthRepository {
   // Profile methods
   Future<Either<Failure, ProfileResponseModel>> getProfile(int userId);
   Future<Either<Failure, ProfileDataModel?>> getSavedProfile();
+  Future<Either<Failure, List<BranchModel>?>> getSavedBranches();
+  Future<Either<Failure, List<ProductModel>>> getProducts(int branchId);
 }

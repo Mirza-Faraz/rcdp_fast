@@ -12,5 +12,11 @@ abstract class ClientRepository {
     required double longitude,
     required int page,
     required int rows,
+    String? memberId,
+    String? cnic,
+    String? productId,
+    String? centerNo,
+    String? caseDate,
+    String? caseDateTo,
   });
 }

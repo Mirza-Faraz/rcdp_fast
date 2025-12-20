@@ -41,24 +41,34 @@ class ClientRepositoryImpl implements ClientRepository {
     required double longitude,
     required int page,
     required int rows,
+    String? memberId,
+    String? cnic,
+    String? productId,
+    String? centerNo,
+    String? caseDate,
+    String? caseDateTo,
   }) async {
     if (await networkInfo.isConnected) {
       try {
-        final response = await remoteDataSource.getNearbyClients(
+        final result = await remoteDataSource.getNearbyClients(
           userId: userId,
           branchId: branchId,
           latitude: latitude,
           longitude: longitude,
           page: page,
           rows: rows,
+          memberId: memberId,
+          cnic: cnic,
+          productId: productId,
+          centerNo: centerNo,
+          caseDate: caseDate,
+          caseDateTo: caseDateTo,
         );
-        return Right(response);
+        return Right(result);
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
-      } on NetworkException catch (e) {
-        return Left(NetworkFailure(e.message));
       } catch (e) {
-        return Left(ServerFailure('An unexpected error occurred: ${e.toString()}'));
+        return Left(ServerFailure(e.toString()));
       }
     } else {
       return const Left(NetworkFailure('No internet connection'));

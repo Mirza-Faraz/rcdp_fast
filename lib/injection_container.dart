@@ -11,12 +11,16 @@ import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/home/data/datasources/client_remote_data_source.dart';
 import 'features/home/data/repositories/client_repository_impl.dart';
 import 'features/home/domain/repositories/client_repository.dart';
+import 'features/home/data/datasources/report_remote_data_source.dart';
+import 'features/home/data/repositories/report_repository_impl.dart';
+import 'features/home/domain/repositories/report_repository.dart';
 import 'features/auth/domain/usecases/get_saved_username_usecase.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/domain/usecases/save_username_usecase.dart';
 import 'features/auth/domain/usecases/get_profile_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/home/presentation/manager/nearby_clients_cubit.dart';
+import 'features/home/presentation/manager/reports_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -25,6 +29,7 @@ Future<void> init() async {
   // Bloc
   sl.registerFactory(() => AuthBloc(loginUseCase: sl(), saveUsernameUseCase: sl(), getSavedUsernameUseCase: sl()));
   sl.registerFactory(() => NearbyClientsCubit(clientRepository: sl()));
+  sl.registerFactory(() => ReportsCubit(reportRepository: sl()));
 
   // Use cases
   sl.registerLazySingleton(() => LoginUseCase(sl()));
@@ -35,10 +40,12 @@ Future<void> init() async {
   // Repository
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(remoteDataSource: sl(), localDataSource: sl(), networkInfo: sl()));
   sl.registerLazySingleton<ClientRepository>(() => ClientRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()));
+  sl.registerLazySingleton<ReportRepository>(() => ReportRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()));
 
   // Data sources
   sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(apiClient: sl()));
   sl.registerLazySingleton<ClientRemoteDataSource>(() => ClientRemoteDataSourceImpl(apiClient: sl()));
+  sl.registerLazySingleton<ReportRemoteDataSource>(() => ReportRemoteDataSourceImpl(apiClient: sl()));
 
   sl.registerLazySingleton<AuthLocalDataSource>(() => AuthLocalDataSourceImpl(sharedPreferences: sl()));
 

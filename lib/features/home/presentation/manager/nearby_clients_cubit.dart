@@ -57,6 +57,14 @@ class NearbyClientsCubit extends Cubit<NearbyClientsState> {
   int? _branchId;
   double? _latitude;
   double? _longitude;
+  
+  // Optional filters
+  String? _memberId;
+  String? _cnic;
+  String? _productId;
+  String? _centerNo;
+  String? _caseDate;
+  String? _caseDateTo;
 
   NearbyClientsCubit({required ClientRepository clientRepository})
       : _clientRepository = clientRepository,
@@ -66,6 +74,12 @@ class NearbyClientsCubit extends Cubit<NearbyClientsState> {
     required int userId,
     required int branchId,
     bool isRefresh = false,
+    String? memberId,
+    String? cnic,
+    String? productId,
+    String? centerNo,
+    String? caseDate,
+    String? caseDateTo,
   }) async {
     if (_isFetching) return;
 
@@ -74,6 +88,12 @@ class NearbyClientsCubit extends Cubit<NearbyClientsState> {
       _allClients.clear();
       _userId = userId;
       _branchId = branchId;
+      _memberId = memberId;
+      _cnic = cnic;
+      _productId = productId;
+      _centerNo = centerNo;
+      _caseDate = caseDate;
+      _caseDateTo = caseDateTo;
       emit(NearbyClientsLoading());
     } else {
         if (state is NearbyClientsLoaded && (state as NearbyClientsLoaded).hasReachedMax) return;
@@ -127,6 +147,12 @@ class NearbyClientsCubit extends Cubit<NearbyClientsState> {
         longitude: _longitude!,
         page: _page,
         rows: _rows,
+        memberId: _memberId,
+        cnic: _cnic,
+        productId: _productId,
+        centerNo: _centerNo,
+        caseDate: _caseDate,
+        caseDateTo: _caseDateTo,
       );
 
       result.fold(

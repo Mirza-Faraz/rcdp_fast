@@ -4,6 +4,10 @@ import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../injection_container.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
+import '../../../auth/data/models/branch_model.dart';
+import '../../../auth/data/models/product_model.dart';
+import '../../../../core/constants/app_text_styles.dart';
 
 class ApplyFiltersPage extends StatefulWidget {
   final Function(Map<String, dynamic>)? onFiltersApplied;
@@ -27,11 +31,13 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
   bool _isProductDropdownOpen = false;
 
   // Products and branches loaded from APIs
-  List<String> _allProducts = [];
-  List<String> _branches = ['SELECT BRANCH'];
+  List<ProductModel> _allProducts = [];
+  List<String> _selectedProductNames = [];
+  List<int> _selectedProductIds = [];
 
   bool _isBranchLoading = false;
   String? _branchError;
+  String? _branchName;
 
   bool _isProductLoading = false;
   String? _productError;
@@ -39,42 +45,49 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
   @override
   void initState() {
     super.initState();
-    _fetchBranches();
-    _fetchProducts();
+    _loadInitialData();
   }
 
-  Future<void> _fetchBranches() async {
+  Future<void> _loadInitialData() async {
+    await _loadUserBranch();
+    if (_selectedBranchId != null) {
+      _fetchProducts(int.parse(_selectedBranchId!));
+    }
+  }
+
+  Future<void> _loadUserBranch() async {
     setState(() {
       _isBranchLoading = true;
       _branchError = null;
     });
 
     try {
-      final response = await _apiClient.post(ApiEndpoints.getBranchDropDown);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data;
-        final List<dynamic> list = (data is Map && data['data'] is List) ? data['data'] as List : <dynamic>[];
-
-        final names = list.whereType<Map<String, dynamic>>().map((e) => e['BranchID_Name']?.toString() ?? '').where((name) => name.isNotEmpty).toList();
-
-        setState(() {
-          _branches = ['SELECT BRANCH', ...names];
-        });
-      } else {
-        setState(() {
-          _branchError = 'Failed to load branches (${response.statusCode}).';
-        });
-      }
+      final authRepo = sl<AuthRepository>();
+      final branchesResult = await authRepo.getSavedBranches();
+      
+      branchesResult.fold(
+        (failure) {
+          setState(() {
+            _branchError = 'Failed to load branches.';
+          });
+        },
+        (branches) {
+          if (branches != null && branches.isNotEmpty) {
+            setState(() {
+              // Auto-select the first branch
+              _selectedBranchId = branches.first.branchId.toString();
+              _branchName = branches.first.branchName;
+            });
+          } else {
+            setState(() {
+              _branchError = 'No branches found for this user.';
+            });
+          }
+        },
+      );
     } catch (e) {
       setState(() {
-        if (e is ServerException) {
-          _branchError = e.message;
-        } else if (e is NetworkException) {
-          _branchError = e.message;
-        } else {
-          _branchError = 'Failed to load branches. Please try again.';
-        }
+        _branchError = 'Failed to load user branch.';
       });
     } finally {
       if (mounted) {
@@ -85,38 +98,36 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
     }
   }
 
-  Future<void> _fetchProducts() async {
+  Future<void> _fetchProducts(int branchId) async {
     setState(() {
       _isProductLoading = true;
       _productError = null;
     });
 
     try {
-      final response = await _apiClient.get(ApiEndpoints.getProductDropDown);
+      final authRepo = sl<AuthRepository>();
+      final result = await authRepo.getProducts(branchId);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data;
-        final List<dynamic> list = (data is Map && data['data'] is List) ? data['data'] as List : <dynamic>[];
-
-        final names = list.whereType<Map<String, dynamic>>().map((e) => e['Product_Description']?.toString() ?? '').where((name) => name.isNotEmpty).toList();
-
-        setState(() {
-          _allProducts = names;
-        });
-      } else {
-        setState(() {
-          _productError = 'Failed to load products (${response.statusCode}).';
-        });
-      }
+      result.fold(
+        (failure) {
+          setState(() {
+            _productError = failure.message;
+          });
+        },
+        (products) {
+          setState(() {
+            _allProducts = products;
+            // Clear selection if current selected product is not in the new list
+            if (_selectedProductIds.isNotEmpty && !products.any((ProductModel p) => _selectedProductIds.contains(p.productId))) {
+              _selectedProductIds.clear();
+              _selectedProductNames.clear();
+            }
+          });
+        },
+      );
     } catch (e) {
       setState(() {
-        if (e is ServerException) {
-          _productError = e.message;
-        } else if (e is NetworkException) {
-          _productError = e.message;
-        } else {
-          _productError = 'Failed to load products. Please try again.';
-        }
+        _productError = 'Failed to load products. Please try again.';
       });
     } finally {
       if (mounted) {
@@ -215,28 +226,6 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
     );
   }
 
-  Widget _buildDropdown({required String value, required List<String> items, required Function(String?) onChanged}) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isExpanded: true,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          items: items.map((item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(item, style: TextStyle(color: item == 'SELECT BRANCH' ? Colors.grey : Colors.black87, fontSize: 14)),
-            );
-          }).toList(),
-          onChanged: onChanged,
-        ),
-      ),
-    );
-  }
 
   Widget _buildBranchDropdown() {
     if (_isBranchLoading) {
@@ -251,19 +240,22 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
           Expanded(
             child: Text(_branchError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
           ),
-          TextButton(onPressed: _fetchBranches, child: const Text('Retry')),
+          TextButton(onPressed: _loadUserBranch, child: const Text('Retry')),
         ],
       );
     }
 
-    return _buildDropdown(
-      value: _selectedBranchId ?? 'SELECT BRANCH',
-      items: _branches,
-      onChanged: (value) {
-        setState(() {
-          _selectedBranchId = value == 'SELECT BRANCH' ? null : value;
-        });
-      },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        _branchName ?? 'No Branch',
+        style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
+      ),
     );
   }
 
@@ -301,7 +293,11 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
           Expanded(
             child: Text(_productError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
           ),
-          TextButton(onPressed: _fetchProducts, child: const Text('Retry')),
+          TextButton(onPressed: () {
+            if (_selectedBranchId != null) {
+              _fetchProducts(int.parse(_selectedBranchId!));
+            }
+          }, child: const Text('Retry')),
         ],
       );
     }
@@ -326,8 +322,14 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
                 children: [
                   Expanded(
                     child: Text(
-                      _selectedProducts.isEmpty ? 'SELECT PRODUCT' : '${_selectedProducts.length} Selected',
-                      style: TextStyle(color: _selectedProducts.isEmpty ? Colors.grey.shade400 : Colors.black87, fontSize: 14),
+                      _selectedProductIds.isEmpty 
+                          ? 'SELECT PRODUCT' 
+                          : _selectedProductNames.first,
+                      style: TextStyle(
+                        color: _selectedProductIds.isEmpty ? Colors.grey.shade400 : Colors.black87, 
+                        fontSize: 14,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                   Icon(_isProductDropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.grey),
@@ -338,72 +340,35 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
           if (_isProductDropdownOpen)
             Container(
               constraints: const BoxConstraints(maxHeight: 250),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Select All option
-                  InkWell(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _allProducts.length,
+                itemBuilder: (context, index) {
+                  final product = _allProducts[index];
+                  final isSelected = _selectedProductIds.contains(product.productId);
+                  return InkWell(
                     onTap: () {
                       setState(() {
-                        if (_selectedProducts.length == _allProducts.length) {
-                          _selectedProducts.clear();
-                        } else {
-                          _selectedProducts = List<String>.from(_allProducts);
-                        }
+                        // Single selection logic
+                        _selectedProductIds = [product.productId];
+                        _selectedProductNames = [product.productDescription];
+                        _isProductDropdownOpen = false;
                       });
                     },
                     child: Container(
-                      color: _selectedProducts.length == _allProducts.length ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                      color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              _selectedProducts.length == _allProducts.length ? 'Deselect All' : 'Select All',
-                              style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w600),
-                            ),
+                            child: Text(product.productDescription, style: const TextStyle(fontSize: 14, color: Colors.black87)),
                           ),
-                          if (_selectedProducts.length == _allProducts.length) const Icon(Icons.check, color: AppColors.primary, size: 20),
+                          if (isSelected) const Icon(Icons.check, color: AppColors.primary, size: 20),
                         ],
                       ),
                     ),
-                  ),
-                  const Divider(height: 1),
-                  // Product list
-                  Flexible(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _allProducts.length,
-                      itemBuilder: (context, index) {
-                        final product = _allProducts[index];
-                        final isSelected = _selectedProducts.contains(product);
-                        return InkWell(
-                          onTap: () {
-                            setState(() {
-                              if (isSelected) {
-                                _selectedProducts.remove(product);
-                              } else {
-                                _selectedProducts.add(product);
-                              }
-                            });
-                          },
-                          child: Container(
-                            color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(product, style: const TextStyle(fontSize: 14, color: Colors.black87)),
-                                ),
-                                if (isSelected) const Icon(Icons.check, color: AppColors.primary, size: 20),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
         ],
@@ -420,7 +385,7 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
             'branchId': _selectedBranchId,
             'memberId': _memberIdController.text.trim(),
             'creditOfficer': _creditOfficerController.text.trim(),
-            'products': _selectedProducts,
+            'products': _selectedProductIds,
             'groupId': _groupIdController.text.trim(),
             'cnic': _cnicController.text.trim(),
           };

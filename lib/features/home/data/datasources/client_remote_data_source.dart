@@ -14,6 +14,12 @@ abstract class ClientRemoteDataSource {
     required double longitude,
     required int page,
     required int rows,
+    String? memberId,
+    String? cnic,
+    String? productId,
+    String? centerNo,
+    String? caseDate,
+    String? caseDateTo,
   });
 }
 
@@ -54,6 +60,12 @@ class ClientRemoteDataSourceImpl implements ClientRemoteDataSource {
     required double longitude,
     required int page,
     required int rows,
+    String? memberId,
+    String? cnic,
+    String? productId,
+    String? centerNo,
+    String? caseDate,
+    String? caseDateTo,
   }) async {
     try {
       final response = await apiClient.get(
@@ -64,12 +76,13 @@ class ClientRemoteDataSourceImpl implements ClientRemoteDataSource {
           'page': page,
           'rows': rows,
           'Branch_id': branchId,
-          'Member_ID': '',
-          'Case_Date': '',
-          'Case_DateTo': '',
+          'Member_ID': memberId ?? '',
+          'Case_Date': caseDate ?? '',
+          'Case_DateTo': caseDateTo ?? '',
           'UserID': userId,
-          'Product_ID': '',
-          'Center_No': '',
+          'Product_ID': productId ?? '',
+          'Center_No': centerNo ?? '',
+          'CNIC': cnic ?? '', // Added CNIC if supported by API, though user mentioned it as field
           'latitude': latitude,
           'longitude': longitude,
           'Distance': '', 
