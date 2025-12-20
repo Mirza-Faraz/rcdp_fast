@@ -22,6 +22,7 @@ class ApiEndpoints {
   static const String getBranchesByUserId = '/ClientInfo/GetBranchesByUserId';
   static const String getCenterNumber = '/SubmitCase/GetCenterNumber';
   static const String getProductByBranch = '/SubmitCase/GetProductByBranch';
+  static const String getCoByBranch = '/SubmitCase/GetCoByBranch';
   static const String clientSearch = '/ClientInfo/ClientSearch';
 
   // Product endpoints

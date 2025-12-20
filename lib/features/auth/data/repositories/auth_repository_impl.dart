@@ -10,6 +10,7 @@ import '../models/login_response_model.dart';
 import '../models/profile_response_model.dart';
 import '../models/branch_model.dart';
 import '../models/product_model.dart';
+import '../models/credit_officer_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -268,6 +269,28 @@ class AuthRepositoryImpl implements AuthRepository {
           return Right(productResponse.data);
         } else {
           return Left(ServerFailure(productResponse.message));
+        }
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      } on NetworkException catch (e) {
+        return Left(NetworkFailure(e.message));
+      } catch (e) {
+        return Left(ServerFailure('An unexpected error occurred: ${e.toString()}'));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CreditOfficerModel>>> getCreditOfficers(int branchId) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final coResponse = await remoteDataSource.getCreditOfficers(branchId);
+        if (coResponse.status == 'True') {
+          return Right(coResponse.data);
+        } else {
+          return Left(ServerFailure(coResponse.message));
         }
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));

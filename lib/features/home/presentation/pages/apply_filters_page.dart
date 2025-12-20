@@ -7,6 +7,7 @@ import '../../../../injection_container.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../auth/data/models/branch_model.dart';
 import '../../../auth/data/models/product_model.dart';
+import '../../../auth/data/models/credit_officer_model.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
 class ApplyFiltersPage extends StatefulWidget {
@@ -42,6 +43,14 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
   bool _isProductLoading = false;
   String? _productError;
 
+  // Credit Officer selection
+  List<CreditOfficerModel> _allCreditOfficers = [];
+  String? _selectedCreditOfficerId;
+  String? _selectedCreditOfficerName;
+  bool _isCreditOfficerLoading = false;
+  String? _creditOfficerError;
+  bool _isCreditOfficerDropdownOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -51,7 +60,9 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
   Future<void> _loadInitialData() async {
     await _loadUserBranch();
     if (_selectedBranchId != null) {
-      _fetchProducts(int.parse(_selectedBranchId!));
+      final branchId = int.parse(_selectedBranchId!);
+      _fetchProducts(branchId);
+      _fetchCreditOfficers(branchId);
     }
   }
 
@@ -138,6 +149,46 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
     }
   }
 
+  Future<void> _fetchCreditOfficers(int branchId) async {
+    setState(() {
+      _isCreditOfficerLoading = true;
+      _creditOfficerError = null;
+    });
+
+    try {
+      final authRepo = sl<AuthRepository>();
+      final result = await authRepo.getCreditOfficers(branchId);
+
+      result.fold(
+        (failure) {
+          setState(() {
+            _creditOfficerError = failure.message;
+          });
+        },
+        (officers) {
+          setState(() {
+            _allCreditOfficers = officers;
+            // Clear selection if current selected officer is not in the new list
+            if (_selectedCreditOfficerId != null && !officers.any((o) => o.userId == _selectedCreditOfficerId)) {
+              _selectedCreditOfficerId = null;
+              _selectedCreditOfficerName = null;
+            }
+          });
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _creditOfficerError = 'Failed to load credit officers. Please try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCreditOfficerLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   void dispose() {
     _memberIdController.dispose();
@@ -184,7 +235,7 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
             const SizedBox(height: 16),
             _buildFilterField(
               label: 'Credit Officer',
-              child: _buildTextField(controller: _creditOfficerController, hintText: 'Select Credit Officer', hasDropdownIcon: true),
+              child: _buildCreditOfficerDropdown(),
             ),
             const SizedBox(height: 16),
             _buildFilterField(label: 'Product', child: _buildProductDropdown()),
@@ -313,6 +364,7 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
             onTap: () {
               setState(() {
                 _isProductDropdownOpen = !_isProductDropdownOpen;
+                if (_isProductDropdownOpen) _isCreditOfficerDropdownOpen = false;
               });
             },
             child: Container(
@@ -376,6 +428,102 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
     );
   }
 
+  Widget _buildCreditOfficerDropdown() {
+    if (_isCreditOfficerLoading) {
+      return const Center(
+        child: Padding(padding: EdgeInsets.symmetric(vertical: 12.0), child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+
+    if (_creditOfficerError != null) {
+      return Row(
+        children: [
+          Expanded(
+            child: Text(_creditOfficerError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+          ),
+          TextButton(onPressed: () {
+            if (_selectedBranchId != null) {
+              _fetchCreditOfficers(int.parse(_selectedBranchId!));
+            }
+          }, child: const Text('Retry')),
+        ],
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: _isCreditOfficerDropdownOpen ? AppColors.primary : Colors.grey.shade300, width: _isCreditOfficerDropdownOpen ? 2 : 1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isCreditOfficerDropdownOpen = !_isCreditOfficerDropdownOpen;
+                if (_isCreditOfficerDropdownOpen) _isProductDropdownOpen = false;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      _selectedCreditOfficerId == null 
+                          ? 'SELECT USER' 
+                          : _selectedCreditOfficerName ?? '',
+                      style: TextStyle(
+                        color: _selectedCreditOfficerId == null ? Colors.grey.shade400 : Colors.black87, 
+                        fontSize: 14,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  Icon(_isCreditOfficerDropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.grey),
+                ],
+              ),
+            ),
+          ),
+          if (_isCreditOfficerDropdownOpen)
+            Container(
+              constraints: const BoxConstraints(maxHeight: 250),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _allCreditOfficers.length,
+                itemBuilder: (context, index) {
+                  final officer = _allCreditOfficers[index];
+                  final isSelected = _selectedCreditOfficerId == officer.userId;
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedCreditOfficerId = officer.userId;
+                        _selectedCreditOfficerName = officer.userName;
+                        _isCreditOfficerDropdownOpen = false;
+                      });
+                    },
+                    child: Container(
+                      color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(officer.userName, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                          ),
+                          if (isSelected) const Icon(Icons.check, color: AppColors.primary, size: 20),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildApplyButton() {
     return SizedBox(
       width: double.infinity,
@@ -384,7 +532,7 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
           final filters = {
             'branchId': _selectedBranchId,
             'memberId': _memberIdController.text.trim(),
-            'creditOfficer': _creditOfficerController.text.trim(),
+            'creditOfficer': _selectedCreditOfficerId,
             'products': _selectedProductIds,
             'groupId': _groupIdController.text.trim(),
             'cnic': _cnicController.text.trim(),

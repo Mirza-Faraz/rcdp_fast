@@ -9,6 +9,7 @@ import '../models/profile_response_model.dart';
 import '../models/user_rights_model.dart';
 import '../models/branch_model.dart';
 import '../models/product_model.dart';
+import '../models/credit_officer_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponseModel> login(LoginRequestModel request);
@@ -19,6 +20,7 @@ abstract class AuthRemoteDataSource {
   Future<BranchResponseModel> getBranches(int userId);
   Future<String> getCenterNumber(int branchId);
   Future<ProductResponseModel> getProducts(int branchId);
+  Future<CreditOfficerResponseModel> getCreditOfficers(int branchId);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -200,6 +202,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         rethrow;
       }
       throw ServerException('An error occurred while fetching products: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<CreditOfficerResponseModel> getCreditOfficers(int branchId) async {
+    try {
+      final response = await apiClient.get(
+        ApiEndpoints.getCoByBranch,
+        queryParameters: {'BranchId': branchId},
+      );
+
+      if (response.statusCode == 200) {
+        return CreditOfficerResponseModel.fromJson(response.data);
+      } else {
+        throw ServerException('Failed to fetch credit officers');
+      }
+    } catch (e) {
+      if (e is ServerException || e is NetworkException) {
+        rethrow;
+      }
+      throw ServerException('An error occurred while fetching credit officers: ${e.toString()}');
     }
   }
 }
