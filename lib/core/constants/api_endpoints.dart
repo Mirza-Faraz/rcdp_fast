@@ -36,6 +36,8 @@ class ApiEndpoints {
   static const String getOverdueClients = '/SubmitCase/OverDueClients';
   static const String getFollowUpClients = '/SubmitCase/OverDueClients'; // Reusing Overdue endpoint as per user request
   static const String nearbyClient = '/SubmitCase/NearByClients';
+  static const String alreadySavedClients = '/SubmitCase/AlreadySavedClients';
+  static const String loanTrackingList = '/ClientInfo/LoanTrackingList';
 
   // Report endpoints
   static const String clientLedgerReport = 'Report/ClientLedgerReport';

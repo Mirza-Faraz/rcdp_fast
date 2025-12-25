@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../injection_container.dart';
+import '../../../auth/data/datasources/auth_local_data_source.dart';
+import '../manager/loan_tracking_cubit.dart';
+import '../../data/models/loan_tracking_model.dart';
 import 'apply_filters_page.dart';
 
 class LoanTrackingListPage extends StatefulWidget {
@@ -11,15 +16,24 @@ class LoanTrackingListPage extends StatefulWidget {
 
 class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
   int _currentPage = 1;
-  List<Map<String, dynamic>> _loans = [
-    {'sr': '1', 'cnic': '35202-4175458-5', 'id': '9042000003', 'name': 'Faraz', 'amount': '8255558', 'isApproved': 'No', 'isPosted': 'Not Posted', 'approvalProgress': '4/0'},
-  ];
+  final int _pageSize = 20;
+  List<LoanTrackingModel> _loans = [];
   Map<String, dynamic>? _appliedFilters;
-  final ScrollController _headerScrollController = ScrollController();
-  final ScrollController _bodyScrollController = ScrollController();
   bool _hasShownEmptyMessage = false;
+  bool _isInitialLoad = true;
+  late LoanTrackingCubit _cubit;
 
-  final List<String> _columnHeaders = ['Sr#', 'CNIC', 'Id', 'Name', 'Amount', 'Is Approved', 'Is Posted', 'Approval Progress'];
+  final List<String> _columnHeaders = [
+    'Sr#',
+    'CNIC',
+    'Id',
+    'Name',
+    'Amount',
+    'Is Approved',
+    'Is Posted',
+    'Approval Progress',
+    'Client Status'
+  ];
 
   final List<double> _columnWidths = [
     60, // Sr#
@@ -30,56 +44,133 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
     120, // Is Approved
     120, // Is Posted
     140, // Approval Progress
+    180, // Client Status (longer text)
   ];
 
   @override
   void initState() {
     super.initState();
-    _headerScrollController.addListener(_syncHeaderToBody);
-    _bodyScrollController.addListener(_syncBodyToHeader);
-    _loadSampleData();
+    _cubit = sl<LoanTrackingCubit>();
+    _fetchData();
   }
 
-  void _loadSampleData() {
-    setState(() {
-      _loans = [
-        {'sr': '1', 'cnic': '35202-4175458-5', 'id': '9042000003', 'name': 'Faraz', 'amount': '8255558', 'isApproved': 'No', 'isPosted': 'Not Posted', 'approvalProgress': '4/0'},
-      ];
-    });
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Loading data...', style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  void _syncHeaderToBody() {
-    if (_bodyScrollController.hasClients && _headerScrollController.offset != _bodyScrollController.offset) {
-      _bodyScrollController.jumpTo(_headerScrollController.offset);
+  void _hideLoadingDialog() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
     }
   }
 
-  void _syncBodyToHeader() {
-    if (_headerScrollController.hasClients && _bodyScrollController.offset != _headerScrollController.offset) {
-      _headerScrollController.jumpTo(_bodyScrollController.offset);
+  Future<void> _fetchData() async {
+    final localDataSource = sl<AuthLocalDataSource>();
+    final userDesc = await localDataSource.getUserDescription();
+    final branches = await localDataSource.getBranches();
+
+    if (userDesc != null && branches != null && branches.isNotEmpty) {
+      _cubit.fetchLoanTrackingList(
+        userId: userDesc.userId,
+        branchId: branches[0].branchId,
+        page: _currentPage,
+        rows: _pageSize,
+        sidx: 'member_id',
+        sord: 'DESC',
+        memberId: _appliedFilters?['memberId']?.toString(),
+        cnic: _appliedFilters?['cnic']?.toString(),
+        productId: _appliedFilters?['productId']?.toString(),
+        centerNo: _appliedFilters?['centerNo']?.toString(),
+        caseDate: _appliedFilters?['caseDate']?.toString(),
+        caseDateTo: _appliedFilters?['caseDateTo']?.toString(),
+        approvel: _appliedFilters?['approval']?.toString(),
+      );
     }
   }
 
   @override
   void dispose() {
-    _headerScrollController.dispose();
-    _bodyScrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade50,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            _buildTableHeader(),
-            Expanded(child: _loans.isEmpty ? _buildEmptyState() : _buildTableContent()),
-            _buildRecordFoundFooter(),
-            _buildPaginationFooter(),
-          ],
+        child: BlocConsumer<LoanTrackingCubit, LoanTrackingState>(
+          bloc: _cubit,
+          listener: (context, state) {
+            if (state is LoanTrackingLoading) {
+              _showLoadingDialog();
+            } else if (state is LoanTrackingError) {
+              _hideLoadingDialog();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              );
+            } else if (state is LoanTrackingLoaded) {
+              _hideLoadingDialog();
+              setState(() {
+                _loans = state.loans;
+                _isInitialLoad = false;
+              });
+              if (_loans.isNotEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Record Found'),
+                    backgroundColor: AppColors.primary,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            }
+          },
+          builder: (context, state) {
+            return Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Container(
+                      width: 1120,
+                      child: Column(
+                        children: [
+                          _buildTableHeader(),
+                          Expanded(
+                            child: state is LoanTrackingLoading && _loans.isEmpty
+                                ? const Center(child: CircularProgressIndicator())
+                                : (_loans.isEmpty && !_isInitialLoad)
+                                    ? _buildEmptyState()
+                                    : _buildTableContent(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                _buildPaginationFooter(),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -122,30 +213,51 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
                                 setState(() {
                                   _currentPage--;
                                 });
+                                _fetchData();
                               }
                             : null,
-                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                         child: Text(
                           '<<Previous',
-                          style: TextStyle(color: _currentPage > 1 ? AppColors.primary : Colors.grey, fontWeight: FontWeight.w500, fontSize: 14),
+                          style: TextStyle(
+                              color: _currentPage > 1
+                                  ? AppColors.primary
+                                  : Colors.grey,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14),
                         ),
                       ),
                       IconButton(
                         onPressed: () => _openFilters(),
-                        icon: Icon(Icons.filter_list, color: AppColors.primary, size: 24),
+                        icon: Icon(Icons.filter_list,
+                            color: AppColors.primary, size: 24),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
                       TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _currentPage++;
-                          });
-                        },
-                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                        child: const Text(
+                        onPressed: _loans.length == _pageSize
+                            ? () {
+                                setState(() {
+                                  _currentPage++;
+                                });
+                                _fetchData();
+                              }
+                            : null,
+                        style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        child: Text(
                           'Next>>',
-                          style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500, fontSize: 14),
+                          style: TextStyle(
+                              color: _loans.length == _pageSize
+                                  ? AppColors.primary
+                                  : Colors.grey,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14),
                         ),
                       ),
                     ],
@@ -162,22 +274,18 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
   Widget _buildTableHeader() {
     return Container(
       color: AppColors.primary,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        controller: _headerScrollController,
-        child: Row(
-          children: List.generate(_columnHeaders.length, (index) {
-            return Container(
-              width: _columnWidths[index],
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              child: Text(
-                _columnHeaders[index],
-                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis,
-              ),
-            );
-          }),
-        ),
+      child: Row(
+        children: List.generate(_columnHeaders.length, (index) {
+          return Container(
+            width: _columnWidths[index],
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+            child: Text(
+              _columnHeaders[index],
+              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        }),
       ),
     );
   }
@@ -185,56 +293,69 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
   Widget _buildTableContent() {
     return ListView.builder(
       itemCount: _loans.length,
+      padding: const EdgeInsets.symmetric(vertical: 8),
       itemBuilder: (context, rowIndex) {
         final loan = _loans[rowIndex];
         return Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
+            color: Colors.white,
             border: Border(bottom: BorderSide(color: Colors.grey.shade200, width: 1)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            controller: _bodyScrollController,
-            child: Row(
-              children: List.generate(_columnHeaders.length, (colIndex) {
-                final header = _columnHeaders[colIndex];
-                String dataKey = _getDataKeyForHeader(header);
-                return Container(
-                  width: _columnWidths[colIndex],
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  child: Text(
-                    loan[dataKey]?.toString() ?? '-',
-                    style: TextStyle(fontSize: 14, color: (header == 'CNIC' || header == 'Id' || header == 'Name') ? AppColors.primary : Colors.black87),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                );
-              }),
-            ),
+          child: Row(
+            children: [
+              _buildCell(loan.srNo, 0),
+              _buildCell(loan.cnic, 1),
+              _buildCell(loan.clientId, 2),
+              _buildCell(loan.clientName, 3),
+              _buildCell(loan.amount, 4),
+              _buildCell(loan.isApproved, 5),
+              _buildCell(loan.isPosted, 6),
+              _buildCell(loan.approvalProgress, 7),
+              _buildCell(loan.clientStatus, 8),
+            ],
           ),
         );
       },
     );
   }
 
-  String _getDataKeyForHeader(String header) {
-    switch (header) {
-      case 'Sr#':
-        return 'sr';
-      case 'CNIC':
-        return 'cnic';
-      case 'Id':
-        return 'id';
-      case 'Name':
-        return 'name';
-      case 'Amount':
-        return 'amount';
-      case 'Is Approved':
-        return 'isApproved';
-      case 'Is Posted':
-        return 'isPosted';
-      case 'Approval Progress':
-        return 'approvalProgress';
-      default:
-        return header.toLowerCase().replaceAll(' ', '');
+  Widget _buildCell(String text, int colIndex) {
+    return Container(
+      width: _columnWidths[colIndex],
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 14,
+          color: (colIndex > 0 && colIndex < 4) ? AppColors.primary : Colors.black87,
+        ),
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  void _openFilters() async {
+    final filters = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (context) => const ApplyFiltersPage()),
+    );
+
+    if (filters != null) {
+      setState(() {
+        _appliedFilters = filters;
+        _currentPage = 1;
+        _hasShownEmptyMessage = false;
+      });
+      _fetchData();
+      debugPrint('Filters applied: $_appliedFilters');
     }
   }
 
@@ -267,22 +388,6 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
     );
   }
 
-  Widget _buildRecordFoundFooter() {
-    if (_loans.isEmpty) return const SizedBox.shrink();
-    return Container(
-      color: AppColors.primary,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      child: const Row(
-        children: [
-          Text(
-            'Record Found',
-            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPaginationFooter() {
     return Container(
       color: Colors.grey.shade100,
@@ -296,6 +401,7 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
                     setState(() {
                       _currentPage--;
                     });
+                    _fetchData();
                   }
                 : null,
             child: Text(
@@ -305,32 +411,21 @@ class _LoanTrackingListPageState extends State<LoanTrackingListPage> {
           ),
           Text('Page $_currentPage, ${_loans.length} rows', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
           TextButton(
-            onPressed: () {
-              setState(() {
-                _currentPage++;
-              });
-            },
-            child: const Text(
+            onPressed: _loans.length == _pageSize
+                ? () {
+                    setState(() {
+                      _currentPage++;
+                    });
+                    _fetchData();
+                  }
+                : null,
+            child: Text(
               'Next>>',
-              style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500),
+              style: TextStyle(color: _loans.length == _pageSize ? AppColors.primary : Colors.grey, fontWeight: FontWeight.w500),
             ),
           ),
         ],
       ),
     );
-  }
-
-  void _openFilters() async {
-    final filters = await Navigator.push<Map<String, dynamic>>(context, MaterialPageRoute(builder: (context) => const ApplyFiltersPage()));
-
-    if (filters != null) {
-      setState(() {
-        _appliedFilters = filters;
-        _currentPage = 1;
-        _hasShownEmptyMessage = false;
-      });
-      _loadSampleData();
-      debugPrint('Filters applied: $_appliedFilters');
-    }
   }
 }

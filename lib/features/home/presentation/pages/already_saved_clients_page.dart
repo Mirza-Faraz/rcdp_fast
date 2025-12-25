@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../injection_container.dart';
+import '../../data/models/already_saved_client_model.dart';
+import '../../presentation/manager/already_saved_clients_cubit.dart';
+import '../../../../features/auth/data/datasources/auth_local_data_source.dart';
 import 'client_detail_page.dart';
 import 'apply_filters_page.dart';
 
@@ -12,11 +17,13 @@ class AlreadySavedClientsPage extends StatefulWidget {
 
 class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
   int _currentPage = 1;
-  List<Map<String, dynamic>> _clients = [];
+  static const int _pageSize = 20;
+  List<AlreadySavedClientModel> _clients = [];
   Map<String, dynamic>? _appliedFilters;
   final ScrollController _headerScrollController = ScrollController();
   final ScrollController _bodyScrollController = ScrollController();
   bool _hasShownEmptyMessage = false;
+  late AlreadySavedClientsCubit _cubit;
 
   final List<String> _columnHeaders = [
     'Sr#',
@@ -26,7 +33,7 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
   ];
 
   final List<double> _columnWidths = [
-    60,  // Sr#
+    60, // Sr#
     140, // Client Id
     150, // Client Name
     160, // Client Cnic
@@ -37,7 +44,29 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
     super.initState();
     _headerScrollController.addListener(_syncHeaderToBody);
     _bodyScrollController.addListener(_syncBodyToHeader);
-    _loadSampleData();
+    _cubit = sl<AlreadySavedClientsCubit>();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    final localDataSource = sl<AuthLocalDataSource>();
+    final userDesc = await localDataSource.getUserDescription();
+    final branches = await localDataSource.getBranches();
+
+    if (userDesc != null && branches != null && branches.isNotEmpty) {
+      _cubit.fetchAlreadySavedClients(
+        userId: userDesc.userId,
+        branchId: branches[0].branchId,
+        page: _currentPage,
+        rows: _pageSize,
+        memberId: _appliedFilters?['memberId']?.toString(),
+        cnic: _appliedFilters?['cnic']?.toString(),
+        centerNo: _appliedFilters?['centerNo']?.toString(),
+        productId: _appliedFilters?['productId']?.toString(),
+        caseDate: _appliedFilters?['fromDate']?.toString(),
+        caseDateTo: _appliedFilters?['toDate']?.toString(),
+      );
+    }
   }
 
   void _syncHeaderToBody() {
@@ -61,34 +90,43 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
     super.dispose();
   }
 
-  void _loadSampleData() {
-    setState(() {
-      _clients = [
-        {
-          'sr': '1',
-          'clientId': '9042000003',
-          'clientName': 'Test',
-          'clientCnic': '35202-4175458-5',
-        },
-      ];
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            _buildTableHeader(),
-            Expanded(
-              child: _clients.isEmpty
-                  ? _buildEmptyState()
-                  : _buildTableContent(),
-            ),
-          ],
+        child: BlocConsumer<AlreadySavedClientsCubit, AlreadySavedClientsState>(
+          bloc: _cubit,
+          listener: (context, state) {
+            if (state is AlreadySavedClientsError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is AlreadySavedClientsLoaded) {
+              _clients = state.clients;
+            }
+
+            return Column(
+              children: [
+                _buildHeader(),
+                _buildTableHeader(),
+                Expanded(
+                  child: state is AlreadySavedClientsLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _clients.isEmpty
+                          ? _buildEmptyState()
+                          : _buildTableContent(),
+                ),
+                if (_clients.isNotEmpty || _currentPage > 1) _buildPagination(),
+              ],
+            );
+          },
         ),
       ),
       bottomNavigationBar: _buildBottomNavigation(),
@@ -163,9 +201,9 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
               context,
               MaterialPageRoute(
                 builder: (context) => ClientDetailPage(
-                  cnic: client['clientCnic'],
-                  memberId: client['clientId'],
-                  clientName: client['clientName'],
+                  cnic: client.clientCnic,
+                  memberId: client.clientId,
+                  clientName: client.clientName,
                 ),
               ),
             );
@@ -183,26 +221,12 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
               scrollDirection: Axis.horizontal,
               controller: _bodyScrollController,
               child: Row(
-                children: List.generate(_columnHeaders.length, (colIndex) {
-                  final header = _columnHeaders[colIndex];
-                  String dataKey = _getDataKeyForHeader(header);
-                  return Container(
-                    width: _columnWidths[colIndex],
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                    child: Text(
-                      client[dataKey]?.toString() ?? '-',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: (header == 'Client Id' || 
-                                header == 'Client Name' || 
-                                header == 'Client Cnic')
-                            ? AppColors.primary
-                            : Colors.black87,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  );
-                }),
+                children: [
+                  _buildCell(client.srNo, 0),
+                  _buildCell(client.clientId, 1),
+                  _buildCell(client.clientName, 2),
+                  _buildCell(client.clientCnic, 3),
+                ],
               ),
             ),
           ),
@@ -211,19 +235,19 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
     );
   }
 
-  String _getDataKeyForHeader(String header) {
-    switch (header) {
-      case 'Sr#':
-        return 'sr';
-      case 'Client Id':
-        return 'clientId';
-      case 'Client Name':
-        return 'clientName';
-      case 'Client Cnic':
-        return 'clientCnic';
-      default:
-        return header.toLowerCase().replaceAll(' ', '');
-    }
+  Widget _buildCell(String text, int colIndex) {
+    return Container(
+      width: _columnWidths[colIndex],
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 14,
+          color: (colIndex > 0) ? AppColors.primary : Colors.black87,
+        ),
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
   }
 
   Widget _buildEmptyState() {
@@ -254,6 +278,46 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
     );
   }
 
+  Widget _buildPagination() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            onPressed: _currentPage > 1
+                ? () {
+                    setState(() {
+                      _currentPage--;
+                    });
+                    _fetchData();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_left),
+          ),
+          Text(
+            'Page $_currentPage',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          IconButton(
+            onPressed: _clients.length == _pageSize
+                ? () {
+                    setState(() {
+                      _currentPage++;
+                    });
+                    _fetchData();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_right),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _openFilters() async {
     final filters = await Navigator.push<Map<String, dynamic>>(
@@ -266,8 +330,10 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
     if (filters != null) {
       setState(() {
         _appliedFilters = filters;
+        _currentPage = 1;
         _hasShownEmptyMessage = false;
       });
+      _fetchData();
       debugPrint('Filters applied: $_appliedFilters');
     }
   }
