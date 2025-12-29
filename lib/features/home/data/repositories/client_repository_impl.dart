@@ -49,6 +49,7 @@ class ClientRepositoryImpl implements ClientRepository {
     String? centerNo,
     String? caseDate,
     String? caseDateTo,
+    String? distance,
   }) async {
     if (await networkInfo.isConnected) {
       try {
@@ -65,6 +66,7 @@ class ClientRepositoryImpl implements ClientRepository {
           centerNo: centerNo,
           caseDate: caseDate,
           caseDateTo: caseDateTo,
+          distance: distance,
         );
         return Right(result);
       } on ServerException catch (e) {

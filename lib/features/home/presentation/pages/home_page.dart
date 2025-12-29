@@ -141,32 +141,16 @@ class _HomePageState extends State<HomePage> {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        // Check if "message" is "Record Found" or "Record not Found"
-        // The example response for success wasn't fully detailed on structure of "amount", 
-        // but "Record not Found" returned data: [].
-        // Assuming success returns a list or a field with the value.
-        // Let's look at the first example again. 
-        // Wait, "response: ... 'data':[{'Description':'...', 'Total':null}...]"
-        // The AMOUNT API response structure wasn't explicitly shown with data.
-        // But prompt says: "You will amount for the item you clicked... it will show its number or its name at top of it"
-        // I'll assume the structure is similar to the list but with populated 'Total' or a single value?
-        // Let's assume standard response format with 'data'.
-        // If data is empty list [], it means 0 or not found.
-        
-        // Let's handle the response dynamically.
         String amount = '0';
         if (data['data'] != null && (data['data'] as List).isNotEmpty) {
            final firstItem = (data['data'] as List).first;
-           amount = firstItem['Total']?.toString() ?? firstItem['Amount']?.toString() ?? '0'; // Guessing 'Total' or 'Amount'
+           amount = firstItem['Total']?.toString() ?? firstItem['Amount']?.toString() ?? '0';
         } else if (data['total'] != null) {
            amount = data['total'].toString();
         }
         
-        // Actually, looking at the first screenshot... wait, first screenshot is for LIST.
-        // Second screenshot is for Amount... response for "Active Areas" -> "0".
-        // The response shown in prompt for Amount API was failure case: {"message":"Record not Found","data":[],"status":"False"}.
-        // I will assume if success, data contains something.
-        // I will dump the response to debug if needed, but for now standard handling.
+        // Format the amount to remove .0000 onwards
+        amount = _formatAmount(amount);
         
         if (mounted) {
           setState(() {
@@ -184,6 +168,29 @@ class _HomePageState extends State<HomePage> {
       }
     }
   }
+  String _formatAmount(String amount) {
+    if (amount == 'Error' || amount == '0') return amount;
+    
+    try {
+      // Try parsing as double to handle cases like "0.0000"
+      double val = double.parse(amount);
+      // If it's effectively an integer, return as int string
+      if (val == val.toInt()) {
+        return val.toInt().toString();
+      }
+      // Otherwise, if it has decimals, truncate or keep as is? 
+      // User said "should not show the .000 onwards data"
+      // This usually implies they want integers on dashboard.
+      return val.toInt().toString();
+    } catch (e) {
+      // Fallback: if not a number, split by dot if exists
+      if (amount.contains('.')) {
+        return amount.split('.').first;
+      }
+      return amount;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {

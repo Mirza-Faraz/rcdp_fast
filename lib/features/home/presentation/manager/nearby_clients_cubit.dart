@@ -65,6 +65,7 @@ class NearbyClientsCubit extends Cubit<NearbyClientsState> {
   String? _centerNo;
   String? _caseDate;
   String? _caseDateTo;
+  String? _distance;
 
   NearbyClientsCubit({required ClientRepository clientRepository})
       : _clientRepository = clientRepository,
@@ -80,6 +81,7 @@ class NearbyClientsCubit extends Cubit<NearbyClientsState> {
     String? centerNo,
     String? caseDate,
     String? caseDateTo,
+    String? distance,
   }) async {
     if (_isFetching) return;
 
@@ -94,6 +96,7 @@ class NearbyClientsCubit extends Cubit<NearbyClientsState> {
       _centerNo = centerNo;
       _caseDate = caseDate;
       _caseDateTo = caseDateTo;
+      _distance = distance;
       emit(NearbyClientsLoading());
     } else {
         if (state is NearbyClientsLoaded && (state as NearbyClientsLoaded).hasReachedMax) return;
@@ -153,6 +156,7 @@ class NearbyClientsCubit extends Cubit<NearbyClientsState> {
         centerNo: _centerNo,
         caseDate: _caseDate,
         caseDateTo: _caseDateTo,
+        distance: _distance,
       );
 
       result.fold(

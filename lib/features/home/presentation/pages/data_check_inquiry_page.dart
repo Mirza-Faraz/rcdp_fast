@@ -19,16 +19,31 @@ class _DataCheckInquiryPageState extends State<DataCheckInquiryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.primary,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
-            _buildTableHeader(),
             Expanded(
-              child: _inquiries.isEmpty
-                  ? _buildEmptyState()
-                  : _buildTableContent(),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    _buildHeader(),
+                    _buildTableHeader(),
+                    Expanded(
+                      child: _inquiries.isEmpty
+                          ? _buildEmptyState()
+                          : _buildTableContent(),
+                    ),
+                  ],
+                ),
+              ),
             ),
             _buildPaginationFooter(),
           ],
@@ -38,91 +53,41 @@ class _DataCheckInquiryPageState extends State<DataCheckInquiryPage> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      color: AppColors.primary,
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(0),
-                bottomRight: Radius.circular(20),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Data Check Inquiry',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Data Check Inquiry',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        'Page $_currentPage, $_rowsPerPage rows',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      TextButton(
-                        onPressed: _currentPage > 1
-                            ? () {
-                                setState(() {
-                                  _currentPage--;
-                                });
-                              }
-                            : null,
-                        child: Text(
-                          '<<Previous',
-                          style: TextStyle(
-                            color: _currentPage > 1
-                                ? AppColors.primary
-                                : Colors.grey,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => _openFilters(),
-                        child: Icon(
-                          Icons.filter_list,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _currentPage++;
-                          });
-                        },
-                        child: const Text(
-                          'Next>>',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              const SizedBox(height: 4),
+              Text(
+                'Page $_currentPage, $_rowsPerPage rows',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14,
+                ),
               ),
+            ],
+          ),
+          IconButton(
+            onPressed: () => _openFilters(),
+            icon: const Icon(
+              Icons.filter_alt,
+              color: AppColors.primary,
+              size: 28,
             ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
@@ -333,7 +298,15 @@ class _DataCheckInquiryPageState extends State<DataCheckInquiryPage> {
     final filters = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
-        builder: (context) => const ApplyFiltersPage(),
+        builder: (context) => const ApplyFiltersPage(
+          enabledFields: [
+            FilterField.branchId,
+            FilterField.memberId,
+            FilterField.creditOfficer,
+            FilterField.product,
+            FilterField.groupId,
+          ],
+        ),
       ),
     );
 

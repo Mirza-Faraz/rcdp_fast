@@ -20,6 +20,7 @@ abstract class ClientRepository {
     String? centerNo,
     String? caseDate,
     String? caseDateTo,
+    String? distance,
   });
 
   Future<Either<Failure, AlreadySavedClientsResponseModel>> getAlreadySavedClients({

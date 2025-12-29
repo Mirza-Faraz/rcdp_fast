@@ -105,28 +105,44 @@ class _RecoveryFormPageState extends State<RecoveryFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.primary,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDateField(),
-                    const SizedBox(height: 16),
-                    _buildProductField(),
-                    const SizedBox(height: 16),
-                    _buildSearchCheckbox(),
-                    const SizedBox(height: 16),
-                    _buildRadioButtons(),
-                    const SizedBox(height: 16),
-                    _buildSearchField(),
-                    const SizedBox(height: 32),
-                    _buildSearchButton(),
+                    _buildHeader(),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildDateField(),
+                            const SizedBox(height: 16),
+                            _buildProductField(),
+                            const SizedBox(height: 16),
+                            _buildSearchCheckbox(),
+                            const SizedBox(height: 16),
+                            _buildRadioButtons(),
+                            const SizedBox(height: 16),
+                            _buildSearchField(),
+                            const SizedBox(height: 32),
+                            _buildSearchButton(),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -138,34 +154,32 @@ class _RecoveryFormPageState extends State<RecoveryFormPage> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      color: AppColors.primary,
-      child: Stack(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            margin: const EdgeInsets.only(top: 0),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(0), bottomRight: Radius.circular(20), topLeft: Radius.circular(0), topRight: Radius.circular(20)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Recovery Form',
-                        style: TextStyle(color: AppColors.primary, fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text('Fill out this recovery form to update information', style: TextStyle(color: Colors.black87, fontSize: 14)),
-                    ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Recovery Form',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Fill out this recovery form to update information',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -194,8 +208,8 @@ class _RecoveryFormPageState extends State<RecoveryFormPage> {
           },
           child: Container(
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+              borderRadius: BorderRadius.circular(10),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: Row(
@@ -205,7 +219,7 @@ class _RecoveryFormPageState extends State<RecoveryFormPage> {
                   _dateController.text.isEmpty ? 'DD/MM/YYYY' : _dateController.text,
                   style: TextStyle(color: _dateController.text.isEmpty ? Colors.grey.shade400 : Colors.black87, fontSize: 14),
                 ),
-                const Icon(Icons.calendar_today, color: Colors.grey, size: 20),
+                const Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
               ],
             ),
           ),
@@ -243,8 +257,8 @@ class _RecoveryFormPageState extends State<RecoveryFormPage> {
         else
           Container(
             decoration: BoxDecoration(
-              border: Border.all(color: _isProductDropdownOpen ? AppColors.primary : Colors.grey.shade300, width: _isProductDropdownOpen ? 2 : 1),
-              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: _isProductDropdownOpen ? AppColors.primary : Colors.grey.shade300, width: 1),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
               children: [
@@ -365,8 +379,8 @@ class _RecoveryFormPageState extends State<RecoveryFormPage> {
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: TextField(
               controller: _searchController,
@@ -407,7 +421,8 @@ class _RecoveryFormPageState extends State<RecoveryFormPage> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          elevation: 2,
         ),
         child: const Text('Search', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       ),

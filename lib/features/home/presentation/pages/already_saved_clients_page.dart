@@ -93,7 +93,7 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.primary,
       body: SafeArea(
         child: BlocConsumer<AlreadySavedClientsCubit, AlreadySavedClientsState>(
           bloc: _cubit,
@@ -114,14 +114,29 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
 
             return Column(
               children: [
-                _buildHeader(),
-                _buildTableHeader(),
                 Expanded(
-                  child: state is AlreadySavedClientsLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _clients.isEmpty
-                          ? _buildEmptyState()
-                          : _buildTableContent(),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildHeader(),
+                        _buildTableHeader(),
+                        Expanded(
+                          child: state is AlreadySavedClientsLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : _clients.isEmpty
+                                  ? _buildEmptyState()
+                                  : _buildTableContent(),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 if (_clients.isNotEmpty || _currentPage > 1) _buildPagination(),
               ],
@@ -134,8 +149,8 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -144,18 +159,20 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
               'Already Saved Clients',
               style: TextStyle(
                 color: AppColors.primary,
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           IconButton(
             onPressed: () => _openFilters(),
-            icon: Icon(
-              Icons.filter_list,
+            icon: const Icon(
+              Icons.filter_alt,
               color: AppColors.primary,
-              size: 24,
+              size: 28,
             ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
@@ -280,15 +297,12 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
 
   Widget _buildPagination() {
     return Container(
+      color: Colors.grey.shade100,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
-      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
+          TextButton(
             onPressed: _currentPage > 1
                 ? () {
                     setState(() {
@@ -297,13 +311,22 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
                     _fetchData();
                   }
                 : null,
-            icon: const Icon(Icons.chevron_left),
+            child: Text(
+              '<<Previous',
+              style: TextStyle(
+                color: _currentPage > 1 ? AppColors.primary : Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           Text(
             'Page $_currentPage',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 14,
+            ),
           ),
-          IconButton(
+          TextButton(
             onPressed: _clients.length == _pageSize
                 ? () {
                     setState(() {
@@ -312,7 +335,13 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
                     _fetchData();
                   }
                 : null,
-            icon: const Icon(Icons.chevron_right),
+            child: const Text(
+              'Next>>',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),
@@ -323,7 +352,15 @@ class _AlreadySavedClientsPageState extends State<AlreadySavedClientsPage> {
     final filters = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
-        builder: (context) => const ApplyFiltersPage(),
+        builder: (context) => const ApplyFiltersPage(
+          enabledFields: [
+            FilterField.branchId,
+            FilterField.memberId,
+            FilterField.creditOfficer,
+            FilterField.product,
+            FilterField.groupId,
+          ],
+        ),
       ),
     );
 

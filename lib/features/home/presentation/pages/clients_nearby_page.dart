@@ -116,13 +116,28 @@ class _ClientsNearbyViewState extends State<_ClientsNearbyView> {
             
             return Column(
               children: [
-                _buildHeader(clients.length, hasReachedMax),
                 Expanded(
-                  child: state is NearbyClientsLoading && clients.isEmpty
-                      ? const Center(child: CircularProgressIndicator())
-                      : clients.isEmpty
-                          ? _buildEmptyState()
-                          : _buildScrollableTable(clients, hasReachedMax),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildHeader(clients.length, hasReachedMax),
+                        Expanded(
+                          child: state is NearbyClientsLoading && clients.isEmpty
+                              ? const Center(child: CircularProgressIndicator())
+                              : clients.isEmpty
+                                  ? _buildEmptyState()
+                                  : _buildScrollableTable(clients, hasReachedMax),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 _buildPaginationFooter(hasReachedMax),
               ],
@@ -260,58 +275,57 @@ class _ClientsNearbyViewState extends State<_ClientsNearbyView> {
   }
 
   Widget _buildHeader(int count, bool hasReachedMax) {
-    return Container(
-      color: AppColors.primary,
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            bottomRight: Radius.circular(30),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Clients Nearby',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Rows: $count',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Clients Nearby',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Rows: $count',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-             Row(
-                children: [
-                    IconButton(
-                        onPressed: () => _openFilters(),
-                        icon: const Icon(Icons.filter_list, color: AppColors.primary, size: 28),
-                    ),
-                    IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context, 
-                            MaterialPageRoute(builder: (_) => const NearbyClientsMapPage())
-                          );
-                        },
-                        icon: const Icon(Icons.location_on, color: AppColors.primary, size: 28),
-                    ),
-                ],
-             )
-          ],
-        ),
+          Row(
+            children: [
+              IconButton(
+                onPressed: () => _openFilters(),
+                icon: const Icon(Icons.filter_alt,
+                    color: AppColors.primary, size: 28),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const NearbyClientsMapPage()));
+                },
+                icon: const Icon(Icons.location_on,
+                    color: AppColors.primary, size: 28),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -345,7 +359,7 @@ class _ClientsNearbyViewState extends State<_ClientsNearbyView> {
              onPressed: () {
                  _fetchClients();
              },
-             child: const Text('Next >>', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+             child: const Text('Next>>', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
            ),
         ],
       ),
@@ -355,7 +369,18 @@ class _ClientsNearbyViewState extends State<_ClientsNearbyView> {
   void _openFilters() async {
     final filters = await Navigator.push<Map<String, dynamic>>(
       context, 
-      MaterialPageRoute(builder: (_) => const ApplyFiltersPage())
+      MaterialPageRoute(
+        builder: (_) => const ApplyFiltersPage(
+          enabledFields: [
+            FilterField.branchId,
+            FilterField.memberId,
+            FilterField.creditOfficer,
+            FilterField.product,
+            FilterField.groupId,
+            FilterField.distance,
+          ],
+        ),
+      ),
     );
     
     if (filters != null && mounted) {
@@ -366,7 +391,8 @@ class _ClientsNearbyViewState extends State<_ClientsNearbyView> {
         memberId: filters['memberId'],
         cnic: filters['cnic'],
         productId: (filters['products'] as List?)?.join(','),
-        centerNo: filters['groupId'], // Assuming Group ID maps to center number as per UI context or similar
+        centerNo: filters['groupId'],
+        distance: filters['distance'], // Pass distance to cubit
         isRefresh: true,
       );
     }

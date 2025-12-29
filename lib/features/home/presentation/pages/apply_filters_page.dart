@@ -10,10 +10,29 @@ import '../../../auth/data/models/product_model.dart';
 import '../../../auth/data/models/credit_officer_model.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
+enum FilterField {
+  branchId,
+  memberId,
+  cnic,
+  creditOfficer,
+  product,
+  groupId,
+  caseDateFrom,
+  caseDateTo,
+  overdueAmount,
+  distance,
+  approvalStatus,
+}
+
 class ApplyFiltersPage extends StatefulWidget {
   final Function(Map<String, dynamic>)? onFiltersApplied;
+  final List<FilterField>? enabledFields;
 
-  const ApplyFiltersPage({super.key, this.onFiltersApplied});
+  const ApplyFiltersPage({
+    super.key, 
+    this.onFiltersApplied,
+    this.enabledFields,
+  });
 
   @override
   State<ApplyFiltersPage> createState() => _ApplyFiltersPageState();
@@ -27,6 +46,10 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
   final TextEditingController _cnicController = TextEditingController();
   final TextEditingController _creditOfficerController = TextEditingController();
   final TextEditingController _groupIdController = TextEditingController();
+  final TextEditingController _dateFromController = TextEditingController();
+  final TextEditingController _dateToController = TextEditingController();
+  final TextEditingController _overDueAmountController = TextEditingController();
+  final TextEditingController _distanceController = TextEditingController();
 
   List<String> _selectedProducts = [];
   bool _isProductDropdownOpen = false;
@@ -50,6 +73,11 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
   bool _isCreditOfficerLoading = false;
   String? _creditOfficerError;
   bool _isCreditOfficerDropdownOpen = false;
+
+  // Approval Status selection
+  String? _selectedApprovalStatus;
+  bool _isApprovalStatusDropdownOpen = false;
+  final List<String> _approvalStatuses = ['APPROVED', 'PENDING', 'REJECTED', 'POSTED'];
 
   @override
   void initState() {
@@ -195,63 +223,127 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
     _cnicController.dispose();
     _creditOfficerController.dispose();
     _groupIdController.dispose();
+    _dateFromController.dispose();
+    _dateToController.dispose();
+    _overDueAmountController.dispose();
+    _distanceController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final fields = widget.enabledFields ?? [
+      FilterField.branchId,
+      FilterField.memberId,
+      FilterField.creditOfficer,
+      FilterField.product,
+      FilterField.groupId,
+    ];
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: AppColors.primary),
           onPressed: () => Navigator.pop(context),
         ),
+        centerTitle: true,
         title: const Text(
           'Apply Filters',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppColors.primary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            decoration: TextDecoration.underline,
+          ),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Center(
-              child: Text(
-                'Apply Filters',
-                style: TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+            if (fields.contains(FilterField.branchId)) ...[
+              _buildFilterField(label: 'Branch ID', child: _buildBranchDropdown()),
+              const SizedBox(height: 16),
+            ],
+            if (fields.contains(FilterField.memberId)) ...[
+              _buildFilterField(
+                label: 'Member ID',
+                child: _buildTextField(controller: _memberIdController),
               ),
-            ),
-            const SizedBox(height: 24),
-            _buildFilterField(label: 'Branch ID', child: _buildBranchDropdown()),
+              const SizedBox(height: 16),
+            ],
+            if (fields.contains(FilterField.caseDateFrom)) ...[
+              _buildFilterField(
+                label: 'Case Date From',
+                child: _buildDateField(_dateFromController),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (fields.contains(FilterField.caseDateTo)) ...[
+              _buildFilterField(
+                label: 'Case Date To',
+                child: _buildDateField(_dateToController),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (fields.contains(FilterField.creditOfficer)) ...[
+              _buildFilterField(
+                label: 'Credit Officer',
+                child: _buildCreditOfficerDropdown(),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (fields.contains(FilterField.product)) ...[
+              _buildFilterField(label: 'Product', child: _buildProductDropdown()),
+              const SizedBox(height: 16),
+            ],
+            if (fields.contains(FilterField.groupId)) ...[
+              _buildFilterField(
+                label: 'Group Id',
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: SizedBox(
+                    width: 150,
+                    child: _buildTextField(controller: _groupIdController),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (fields.contains(FilterField.overdueAmount)) ...[
+              _buildFilterField(
+                label: 'Over Due Amount',
+                child: _buildTextField(controller: _overDueAmountController),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (fields.contains(FilterField.distance)) ...[
+              _buildFilterField(
+                label: 'Distance (in meters)',
+                child: _buildTextField(controller: _distanceController),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (fields.contains(FilterField.approvalStatus)) ...[
+              _buildFilterField(
+                label: 'Approval Status',
+                child: _buildApprovalStatusDropdown(),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (fields.contains(FilterField.cnic)) ...[
+              _buildFilterField(
+                label: 'CNIC',
+                child: _buildTextField(controller: _cnicController),
+              ),
+              const SizedBox(height: 16),
+            ],
             const SizedBox(height: 16),
-            _buildFilterField(
-              label: 'Member ID',
-              child: _buildTextField(controller: _memberIdController),
-            ),
-            const SizedBox(height: 16),
-            _buildFilterField(
-              label: 'Credit Officer',
-              child: _buildCreditOfficerDropdown(),
-            ),
-            const SizedBox(height: 16),
-            _buildFilterField(label: 'Product', child: _buildProductDropdown()),
-            const SizedBox(height: 16),
-            _buildFilterField(
-              label: 'Group Id',
-              child: _buildTextField(controller: _groupIdController),
-            ),
-            const SizedBox(height: 16),
-            _buildFilterField(
-              label: 'CNIC',
-              child: _buildTextField(controller: _cnicController),
-            ),
-            const SizedBox(height: 32),
             _buildApplyButton(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -259,21 +351,68 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
   }
 
   Widget _buildFilterField({required String label, required Widget child}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 120,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 12.0),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 120,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
             ),
           ),
+          const SizedBox(width: 8),
+          Expanded(child: child),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateField(TextEditingController controller) {
+    return InkWell(
+      onTap: () async {
+        final DateTime? picked = await showDatePicker(
+          context: context,
+          initialDate: DateTime.now(),
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+        );
+        if (picked != null) {
+          setState(() {
+            controller.text =
+                '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+          });
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.grey.shade400, width: 0.8),
+          borderRadius: BorderRadius.circular(10),
         ),
-        Expanded(child: child),
-      ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              controller.text.isEmpty ? '' : controller.text,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 14,
+              ),
+            ),
+            // No calendar icon in screenshot for these fields? 
+            // The screenshot shows empty fields but I'll add an icon if it feels right. 
+            // Wait, the screenshot has no icons inside the date fields, just empty white boxes.
+          ],
+        ),
+      ),
     );
   }
 
@@ -297,36 +436,45 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade400, width: 0.8),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(
-        _branchName ?? 'No Branch',
-        style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            _branchName?.toUpperCase() ?? 'SELECT BRANCH',
+            style: TextStyle(
+              color: _branchName == null ? Colors.grey.shade600 : AppColors.primary,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Icon(Icons.arrow_drop_down, color: AppColors.primary),
+        ],
       ),
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, String? hintText, bool hasDropdownIcon = false, VoidCallback? onTap}) {
+  Widget _buildTextField({required TextEditingController controller, String? hintText}) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade400, width: 0.8),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: TextField(
         controller: controller,
+        style: const TextStyle(fontSize: 14),
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.grey.shade400),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          suffixIcon: hasDropdownIcon ? const Icon(Icons.arrow_drop_down, color: Colors.grey) : null,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
-        readOnly: onTap != null,
-        onTap: onTap,
       ),
     );
   }
@@ -355,8 +503,11 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
 
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: _isProductDropdownOpen ? AppColors.primary : Colors.grey.shade300, width: _isProductDropdownOpen ? 2 : 1),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _isProductDropdownOpen ? AppColors.primary : Colors.grey.shade400, 
+          width: 0.8,
+        ),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         children: [
@@ -364,11 +515,14 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
             onTap: () {
               setState(() {
                 _isProductDropdownOpen = !_isProductDropdownOpen;
-                if (_isProductDropdownOpen) _isCreditOfficerDropdownOpen = false;
+                if (_isProductDropdownOpen) {
+                  _isCreditOfficerDropdownOpen = false;
+                  _isApprovalStatusDropdownOpen = false;
+                }
               });
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -376,15 +530,19 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
                     child: Text(
                       _selectedProductIds.isEmpty 
                           ? 'SELECT PRODUCT' 
-                          : _selectedProductNames.first,
+                          : _selectedProductNames.first.toUpperCase(),
                       style: TextStyle(
-                        color: _selectedProductIds.isEmpty ? Colors.grey.shade400 : Colors.black87, 
-                        fontSize: 14,
+                        color: _selectedProductIds.isEmpty ? Colors.grey.shade600 : AppColors.primary, 
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
-                  Icon(_isProductDropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.grey),
+                  Icon(
+                    _isProductDropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, 
+                    color: AppColors.primary,
+                  ),
                 ],
               ),
             ),
@@ -401,7 +559,6 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
                   return InkWell(
                     onTap: () {
                       setState(() {
-                        // Single selection logic
                         _selectedProductIds = [product.productId];
                         _selectedProductNames = [product.productDescription];
                         _isProductDropdownOpen = false;
@@ -409,13 +566,16 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
                     },
                     child: Container(
                       color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text(product.productDescription, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                            child: Text(
+                              product.productDescription, 
+                              style: const TextStyle(fontSize: 13, color: Colors.black87),
+                            ),
                           ),
-                          if (isSelected) const Icon(Icons.check, color: AppColors.primary, size: 20),
+                          if (isSelected) const Icon(Icons.check, color: AppColors.primary, size: 18),
                         ],
                       ),
                     ),
@@ -452,8 +612,11 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
 
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: _isCreditOfficerDropdownOpen ? AppColors.primary : Colors.grey.shade300, width: _isCreditOfficerDropdownOpen ? 2 : 1),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _isCreditOfficerDropdownOpen ? AppColors.primary : Colors.grey.shade400, 
+          width: 0.8,
+        ),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         children: [
@@ -461,11 +624,14 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
             onTap: () {
               setState(() {
                 _isCreditOfficerDropdownOpen = !_isCreditOfficerDropdownOpen;
-                if (_isCreditOfficerDropdownOpen) _isProductDropdownOpen = false;
+                if (_isCreditOfficerDropdownOpen) {
+                  _isProductDropdownOpen = false;
+                  _isApprovalStatusDropdownOpen = false;
+                }
               });
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -473,15 +639,19 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
                     child: Text(
                       _selectedCreditOfficerId == null 
                           ? 'SELECT USER' 
-                          : _selectedCreditOfficerName ?? '',
+                          : _selectedCreditOfficerName?.toUpperCase() ?? '',
                       style: TextStyle(
-                        color: _selectedCreditOfficerId == null ? Colors.grey.shade400 : Colors.black87, 
-                        fontSize: 14,
+                        color: _selectedCreditOfficerId == null ? Colors.grey.shade600 : AppColors.primary, 
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
-                  Icon(_isCreditOfficerDropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.grey),
+                  Icon(
+                    _isCreditOfficerDropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, 
+                    color: AppColors.primary,
+                  ),
                 ],
               ),
             ),
@@ -505,18 +675,105 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
                     },
                     child: Container(
                       color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text(officer.userName, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                            child: Text(
+                              officer.userName, 
+                              style: const TextStyle(fontSize: 13, color: Colors.black87),
+                            ),
                           ),
-                          if (isSelected) const Icon(Icons.check, color: AppColors.primary, size: 20),
+                          if (isSelected) const Icon(Icons.check, color: AppColors.primary, size: 18),
                         ],
                       ),
                     ),
                   );
                 },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildApprovalStatusDropdown() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: _isApprovalStatusDropdownOpen ? AppColors.primary : Colors.grey.shade400, 
+          width: 0.8,
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isApprovalStatusDropdownOpen = !_isApprovalStatusDropdownOpen;
+                if (_isApprovalStatusDropdownOpen) {
+                  _isProductDropdownOpen = false;
+                  _isCreditOfficerDropdownOpen = false;
+                }
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      _selectedApprovalStatus == null 
+                          ? 'SELECT APPROVAL STATUS' 
+                          : _selectedApprovalStatus!,
+                      style: TextStyle(
+                        color: _selectedApprovalStatus == null ? Colors.grey.shade600 : AppColors.primary, 
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    _isApprovalStatusDropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, 
+                    color: AppColors.primary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_isApprovalStatusDropdownOpen)
+            Container(
+              constraints: const BoxConstraints(maxHeight: 250),
+              child: Column(
+                children: _approvalStatuses.map((status) {
+                  final isSelected = _selectedApprovalStatus == status;
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedApprovalStatus = status;
+                        _isApprovalStatusDropdownOpen = false;
+                      });
+                    },
+                    child: Container(
+                      color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              status, 
+                              style: const TextStyle(fontSize: 13, color: Colors.black87),
+                            ),
+                          ),
+                          if (isSelected) const Icon(Icons.check, color: AppColors.primary, size: 18),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ),
         ],
@@ -535,7 +792,12 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
             'creditOfficer': _selectedCreditOfficerId,
             'products': _selectedProductIds,
             'groupId': _groupIdController.text.trim(),
+            'fromDate': _dateFromController.text.trim(),
+            'toDate': _dateToController.text.trim(),
+            'overDueAmount': _overDueAmountController.text.trim(),
+            'distance': _distanceController.text.trim(),
             'cnic': _cnicController.text.trim(),
+            'approvalStatus': _selectedApprovalStatus,
           };
 
           if (widget.onFiltersApplied != null) {
@@ -547,8 +809,9 @@ class _ApplyFiltersPageState extends State<ApplyFiltersPage> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          elevation: 2,
         ),
         child: const Text('Apply Filters', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       ),

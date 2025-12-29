@@ -22,6 +22,7 @@ abstract class ClientRemoteDataSource {
     String? centerNo,
     String? caseDate,
     String? caseDateTo,
+    String? distance,
   });
   Future<AlreadySavedClientsResponseModel> getAlreadySavedClients({
     required int userId,
@@ -97,6 +98,7 @@ class ClientRemoteDataSourceImpl implements ClientRemoteDataSource {
     String? centerNo,
     String? caseDate,
     String? caseDateTo,
+    String? distance,
   }) async {
     try {
       final response = await apiClient.get(
@@ -116,7 +118,7 @@ class ClientRemoteDataSourceImpl implements ClientRemoteDataSource {
           'CNIC': cnic ?? '', // Added CNIC if supported by API, though user mentioned it as field
           'latitude': latitude,
           'longitude': longitude,
-          'Distance': '', 
+          'Distance': distance ?? '', 
         },
       );
 

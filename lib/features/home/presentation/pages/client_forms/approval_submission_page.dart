@@ -78,7 +78,7 @@ class _ApprovalSubmissionPageState extends State<ApprovalSubmissionPage> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.white),
+            icon: const Icon(Icons.filter_alt, color: Colors.white),
             onPressed: () {
               // Filter functionality
             },
@@ -178,7 +178,7 @@ class _ApprovalSubmissionPageState extends State<ApprovalSubmissionPage> {
           style: TextStyle(fontSize: 16, color: AppColors.primary, fontWeight: FontWeight.bold),
         ),
         IconButton(
-          icon: Icon(Icons.filter_list, color: AppColors.primary),
+          icon: Icon(Icons.filter_alt, color: AppColors.primary),
           onPressed: () {
             // Filter functionality
           },

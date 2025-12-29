@@ -91,13 +91,13 @@ class _FollowUpClientsPageState extends State<FollowUpClientsPage> {
         'UserID': '91248',
         'Branch_id': _appliedFilters?['branchId'] ?? '',
         'Member_ID': _appliedFilters?['memberId'] ?? '',
-        'Case_Date': '',
-        'Case_DateTo': '',
+        'Case_Date': _appliedFilters?['fromDate'] ?? '',
+        'Case_DateTo': _appliedFilters?['toDate'] ?? '',
         'Product_ID': _appliedFilters?['products'] != null && (_appliedFilters!['products'] as List).isNotEmpty 
                       ? (_appliedFilters!['products'] as List).join(',') 
                       : '',
         'Center_No': '',
-        'Amount': '',
+        'Amount': _appliedFilters?['overDueAmount'] ?? '',
       };
 
       final response = await _apiClient.get(
@@ -139,25 +139,33 @@ class _FollowUpClientsPageState extends State<FollowUpClientsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.primary,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
-            if (_error != null)
-              Container(
-                width: double.infinity,
-                color: Colors.red.shade100,
-                padding: const EdgeInsets.all(8),
-                child: Text(_error!, style: const TextStyle(color: Colors.red)),
-              ),
-            _buildTableHeader(),
             Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _clients.isEmpty
-                      ? _buildEmptyState()
-                      : _buildTableContent(),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    _buildHeader(),
+                    _buildTableHeader(),
+                    Expanded(
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _clients.isEmpty
+                              ? _buildEmptyState()
+                              : _buildTableContent(),
+                    ),
+                  ],
+                ),
+              ),
             ),
             _buildPaginationFooter(),
           ],
@@ -167,115 +175,44 @@ class _FollowUpClientsPageState extends State<FollowUpClientsPage> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      color: AppColors.primary,
-      child: Stack(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            margin: const EdgeInsets.only(top: 0),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(0),
-                bottomRight: Radius.circular(20),
-                topLeft: Radius.circular(0),
-                topRight: Radius.circular(20),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Follow Up Clients',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Page $_currentPage, $_rowsPerPage rows',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Follow Up Clients',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextButton(
-                        onPressed: _currentPage > 1
-                            ? () {
-                                setState(() {
-                                  _currentPage--;
-                                });
-                                _fetchFollowUpClients();
-                              }
-                            : null,
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          '<<Previous',
-                          style: TextStyle(
-                            color: _currentPage > 1
-                                ? AppColors.primary
-                                : Colors.grey,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => _openFilters(),
-                        icon: Icon(
-                          Icons.filter_list,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _currentPage++;
-                          });
-                          _fetchFollowUpClients();
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: const Text(
-                          'Next>>',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Page $_currentPage, $_rowsPerPage rows',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 14,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+          IconButton(
+            onPressed: () => _openFilters(),
+            icon: const Icon(
+              Icons.filter_alt,
+              color: AppColors.primary,
+              size: 28,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
@@ -488,7 +425,18 @@ class _FollowUpClientsPageState extends State<FollowUpClientsPage> {
     final filters = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
-        builder: (context) => const ApplyFiltersPage(),
+        builder: (context) => const ApplyFiltersPage(
+          enabledFields: [
+            FilterField.branchId,
+            FilterField.memberId,
+            FilterField.caseDateFrom,
+            FilterField.caseDateTo,
+            FilterField.creditOfficer,
+            FilterField.product,
+            FilterField.groupId,
+            FilterField.overdueAmount,
+          ],
+        ),
       ),
     );
 

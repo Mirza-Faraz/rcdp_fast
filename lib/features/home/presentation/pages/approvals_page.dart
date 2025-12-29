@@ -125,27 +125,34 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.primary,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
-            if (_error != null)
-              Container(
-                width: double.infinity,
-                color: Colors.red.shade100,
-                padding: const EdgeInsets.all(8),
-                child: Text(_error!, style: const TextStyle(color: Colors.red)),
-              ),
-            _buildTableHeader(),
             Expanded(
-              child: _isLoading 
-                ? const Center(child: CircularProgressIndicator())
-                : _approvals.isEmpty
-                  ? _buildEmptyState()
-                  : _buildTableContent(),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    _buildHeader(),
+                    _buildTableHeader(),
+                    Expanded(
+                      child: _isLoading 
+                        ? const Center(child: CircularProgressIndicator())
+                        : _approvals.isEmpty
+                          ? _buildEmptyState()
+                          : _buildTableContent(),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            _buildPaginationFooter(),
           ],
         ),
       ),
@@ -153,112 +160,99 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      color: AppColors.primary,
-      child: Stack(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Column(
         children: [
-          Container(
-            margin: const EdgeInsets.only(top: 0),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(0),
-                bottomRight: Radius.circular(20),
-                topLeft: Radius.circular(0),
-                topRight: Radius.circular(20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Approvals',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              IconButton(
+                onPressed: () => _openFilters(),
+                icon: const Icon(
+                  Icons.filter_alt,
+                  color: AppColors.primary,
+                  size: 32,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Page $_currentPage, $_rowsPerPage rows',
+                style: TextStyle(
+                  color: AppColors.primary.withOpacity(0.8),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Row(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Approvals',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  TextButton(
+                    onPressed: _isLoading || _currentPage <= 1
+                        ? null
+                        : () {
+                            setState(() {
+                              _currentPage--;
+                            });
+                            _fetchApprovals();
+                          },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      '<<Previous',
+                      style: TextStyle(
+                        color: _currentPage > 1 ? AppColors.primary : Colors.grey,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        decoration: TextDecoration.underline,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Page $_currentPage, $_rowsPerPage rows',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextButton(
-                        onPressed: _currentPage > 1
-                            ? () {
-                                setState(() {
-                                  _currentPage--;
-                                });
-                                _fetchApprovals();
-                              }
-                            : null,
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          '<<Previous',
-                          style: TextStyle(
-                            color: _currentPage > 1
-                                ? AppColors.primary
-                                : Colors.grey,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                        ),
+                  const SizedBox(width: 12),
+                  TextButton(
+                    onPressed: _isLoading 
+                        ? null 
+                        : () {
+                            setState(() {
+                              _currentPage++;
+                            });
+                             _fetchApprovals();
+                          },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text(
+                      'Next>>',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        decoration: TextDecoration.underline,
                       ),
-                      IconButton(
-                        onPressed: () => _openFilters(),
-                        icon: Icon(
-                          Icons.filter_list,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _currentPage++;
-                          });
-                          _fetchApprovals();
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: const Text(
-                          'Next>>',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -451,64 +445,20 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
     );
   }
 
-  Widget _buildPaginationFooter() {
-    return Container(
-      color: Colors.grey.shade100,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          TextButton(
-            onPressed: _isLoading || _currentPage <= 1
-                ? null
-                : () {
-                    setState(() {
-                      _currentPage--;
-                    });
-                    _fetchApprovals();
-                  },
-            child: Text(
-              '<<Previous',
-              style: TextStyle(
-                color: _currentPage > 1 ? AppColors.primary : Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Text(
-            'Page $_currentPage, $_rowsPerPage rows',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 14,
-            ),
-          ),
-          TextButton(
-            onPressed: _isLoading 
-                ? null 
-                : () {
-                    setState(() {
-                      _currentPage++;
-                    });
-                     _fetchApprovals();
-                  },
-            child: const Text(
-              'Next>>',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _openFilters() async {
     final filters = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
-        builder: (context) => const ApplyFiltersPage(),
+        builder: (context) => const ApplyFiltersPage(
+          enabledFields: [
+            FilterField.branchId,
+            FilterField.memberId,
+            FilterField.creditOfficer,
+            FilterField.product,
+            FilterField.groupId,
+          ],
+        ),
       ),
     );
 
