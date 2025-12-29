@@ -4,7 +4,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../injection_container.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../manager/reports_cubit.dart';
-import 'apply_filters_page.dart';
 import 'pdf_viewer_page.dart';
 
 class ReportsPage extends StatefulWidget {
@@ -188,16 +187,6 @@ class _ReportsPageState extends State<ReportsPage> {
                 ),
               ],
             ),
-          ),
-          IconButton(
-            onPressed: () => _openFilters(),
-            icon: const Icon(
-              Icons.filter_alt,
-              color: AppColors.primary,
-              size: 28,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
           ),
         ],
       ),
@@ -582,18 +571,6 @@ class _ReportsPageState extends State<ReportsPage> {
     );
   }
 
-  void _openFilters() async {
-    final filters = await Navigator.push<Map<String, dynamic>>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const ApplyFiltersPage(),
-      ),
-    );
-
-    if (filters != null) {
-      debugPrint('Filters applied: $filters');
-    }
-  }
 }
 
 

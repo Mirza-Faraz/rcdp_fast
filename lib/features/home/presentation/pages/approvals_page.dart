@@ -149,6 +149,7 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
                           ? _buildEmptyState()
                           : _buildTableContent(),
                     ),
+                    _buildPagination(),
                   ],
                 ),
               ),
@@ -188,72 +189,6 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
             ],
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Page $_currentPage, $_rowsPerPage rows',
-                style: TextStyle(
-                  color: AppColors.primary.withOpacity(0.8),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: _isLoading || _currentPage <= 1
-                        ? null
-                        : () {
-                            setState(() {
-                              _currentPage--;
-                            });
-                            _fetchApprovals();
-                          },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      '<<Previous',
-                      style: TextStyle(
-                        color: _currentPage > 1 ? AppColors.primary : Colors.grey,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  TextButton(
-                    onPressed: _isLoading 
-                        ? null 
-                        : () {
-                            setState(() {
-                              _currentPage++;
-                            });
-                             _fetchApprovals();
-                          },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text(
-                      'Next>>',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -470,6 +405,82 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
       });
       _fetchApprovals();
     }
+  }
+
+  Widget _buildPagination() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(color: Colors.grey.shade100),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Previous Button
+          TextButton(
+            onPressed: _isLoading || _currentPage <= 1
+                ? null
+                : () {
+                    setState(() {
+                      _currentPage--;
+                    });
+                    _fetchApprovals();
+                  },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              '<<Previous',
+              style: TextStyle(
+                color: _currentPage > 1 ? AppColors.primary : Colors.grey.shade400,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          
+          // Page Info (Centered)
+          Text(
+            'Page $_currentPage, $_rowsPerPage rows',
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          
+          // Next Button
+          TextButton(
+            onPressed: _isLoading 
+                ? null 
+                : () {
+                    setState(() {
+                      _currentPage++;
+                    });
+                    _fetchApprovals();
+                  },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text(
+              'Next>>',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -155,21 +155,21 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 24),
                   _buildInfoField('Rights Group', _profileData?.groupName ?? '-'),
                   const SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _loadProfile, // Refresh profile data
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text(
-                        'Update',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
+                  // SizedBox(
+                  //   width: double.infinity,
+                  //   height: 56,
+                  //   child: ElevatedButton(
+                  //     onPressed: _loadProfile, // Refresh profile data
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: AppColors.primary,
+                  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  //     ),
+                  //     child: const Text(
+                  //       'Update',
+                  //       style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),

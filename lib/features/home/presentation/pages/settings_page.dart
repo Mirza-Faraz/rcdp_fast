@@ -67,17 +67,17 @@ class SettingsPage extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildSettingItem(
-                    context,
-                    icon: Icons.admin_panel_settings_outlined,
-                    title: 'Admin Panel',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const UserTrackingPage()),
-                      );
-                    },
-                  ),
+                  // _buildSettingItem(
+                  //   context,
+                  //   icon: Icons.admin_panel_settings_outlined,
+                  //   title: 'Admin Panel',
+                  //   onTap: () {
+                  //     Navigator.push(
+                  //       context,
+                  //       MaterialPageRoute(builder: (context) => const UserTrackingPage()),
+                  //     );
+                  //   },
+                  // ),
                   _buildSettingItem(
                     context,
                     icon: Icons.location_on_outlined,

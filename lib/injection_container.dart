@@ -23,6 +23,7 @@ import 'features/home/presentation/manager/nearby_clients_cubit.dart';
 import 'features/home/presentation/manager/reports_cubit.dart';
 import 'features/home/presentation/manager/already_saved_clients_cubit.dart';
 import 'features/home/presentation/manager/loan_tracking_cubit.dart';
+import 'features/home/presentation/manager/client_info_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -34,6 +35,7 @@ Future<void> init() async {
   sl.registerFactory(() => ReportsCubit(reportRepository: sl()));
   sl.registerFactory(() => AlreadySavedClientsCubit(clientRepository: sl()));
   sl.registerFactory(() => LoanTrackingCubit(clientRepository: sl()));
+  sl.registerFactory(() => ClientInfoCubit(clientRepository: sl()));
 
   // Use cases
   sl.registerLazySingleton(() => LoginUseCase(sl()));

@@ -8,6 +8,8 @@ import '../models/client_search_model.dart';
 import '../models/nearby_client_model.dart';
 import '../models/already_saved_client_model.dart';
 import '../models/loan_tracking_model.dart';
+import '../models/client_dropdown_models.dart';
+import '../models/client_create_model.dart';
 
 class ClientRepositoryImpl implements ClientRepository {
   final ClientRemoteDataSource remoteDataSource;
@@ -155,6 +157,70 @@ class ClientRepositoryImpl implements ClientRepository {
           caseDateTo: caseDateTo,
           approvel: approvel,
         );
+        return Right(result);
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EducationResponseModel>> getEducationDropDown() async {
+    if (await networkInfo.isConnected) {
+      try {
+        final result = await remoteDataSource.getEducationDropDown();
+        return Right(result);
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, VillageResponseModel>> getVillages(int branchId) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final result = await remoteDataSource.getVillages(branchId);
+        return Right(result);
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, RelationResponseModel>> getAppRelations() async {
+    if (await networkInfo.isConnected) {
+      try {
+        final result = await remoteDataSource.getAppRelations();
+        return Right(result);
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> createClient(ClientCreateRequest request) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final result = await remoteDataSource.createClient(request);
         return Right(result);
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));

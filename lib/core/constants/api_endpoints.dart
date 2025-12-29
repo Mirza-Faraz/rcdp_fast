@@ -44,7 +44,11 @@ class ApiEndpoints {
   static const String summaryReport = 'Report/SummaryReport';
   static const String ldfReport = 'Report/Report';
 
+  // Client Info Form endpoints
+  static const String getEducationDropDown = 'Education/GetEducationDropDown';
+  static const String getVillageDropDown = 'RVVillage/VillageDropDown';
+  static const String getAppRelationDropDown = 'ApplicationRelation/GetAppRelationDropDown';
+  static const String createClientInfo = 'ClientInfo/Create';
+
   // Add more endpoints as needed
-  // static const String getClients = '/clients';
-  // static const String getDisbursements = '/disbursements';
 }

@@ -4,6 +4,8 @@ import '../../data/models/client_search_model.dart';
 import '../../data/models/nearby_client_model.dart';
 import '../../data/models/already_saved_client_model.dart';
 import '../../data/models/loan_tracking_model.dart';
+import '../../data/models/client_dropdown_models.dart';
+import '../../data/models/client_create_model.dart';
 
 abstract class ClientRepository {
   Future<Either<Failure, ClientSearchResponseModel>> searchClient(String cnic, int branchId);
@@ -53,4 +55,8 @@ abstract class ClientRepository {
     String? caseDateTo,
     String? approvel,
   });
+  Future<Either<Failure, EducationResponseModel>> getEducationDropDown();
+  Future<Either<Failure, VillageResponseModel>> getVillages(int branchId);
+  Future<Either<Failure, RelationResponseModel>> getAppRelations();
+  Future<Either<Failure, bool>> createClient(ClientCreateRequest request);
 }
